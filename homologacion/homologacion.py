@@ -4,6 +4,7 @@ Created on 3 feb 2025
 @author: pedrogil
 '''
 
+import sys
 import tkinter
 
 import base_datos
@@ -21,11 +22,15 @@ def refrescar_tabla():
     tabla_equipos.refrescar(lista)
 
 
+def rueda_raton(event):
+    print("rueda")
+
+
 # Ventana principal
 ventana_principal = tkinter.Tk()
 
 # Creamos una cabecera para la aplicación.
-cab = tkinter.Frame(ventana_principal, bg="green", height=2)
+cab = tkinter.Frame(ventana_principal, bg="green", height=20)
 cab.grid(row=0, column=0, sticky="nsew")
 
 # Creamos un marco donde colocar la tabla
@@ -53,7 +58,19 @@ lista = Tabla.formatear_lista_tabla(lista)
 tabla_equipos = Tabla(tabla, cabecera, lista, ancho, ajuste, 50,
                       45, fuente_cabecera, fuente_datos)
 
-ventana_principal.minsize(tabla_equipos.ancho_tabla, 20)
+ventana_principal.minsize(tabla_equipos.ancho_tabla, 300)
+
+tabla.bind("<Button-4>", rueda_raton)
+tabla.bind("<Button-5>", rueda_raton)
+
+# Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
+# depende del sistema operativo.
+if sys.platform == "linux" or sys.platform == "linux2":
+    ventana_principal.attributes("-zoomed", True)
+elif sys.platform == "darwin":
+    raise RuntimeError("Aplicación no diseñada para MAC")
+elif sys.platform == "win32":
+    ventana_principal.state('zoomed')
 
 temporizador_refrescar()
 

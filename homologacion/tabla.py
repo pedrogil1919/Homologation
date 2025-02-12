@@ -1,38 +1,49 @@
 '''
 Created on 3 feb 2025
 
+Definición de la estructura de tabla para mostrar resultados de vistas de la
+base de datos.
+
 @author: pedrogil
 '''
 
 
+import sys
 import tkinter
+
+
+COLOR_BORDE = "black"
 
 
 class Tabla(object):
 
-    def __init__(self, marco, cabecera, datos, ancho, ajuste, alto_cabecera,
+    def __init__(self, marco, cabecera, datos, anchos, ajuste, alto_cabecera,
                  alto_datos, fuente_cabecera, fuente_datos):
         """
         Construye una tabla, y la rellena con los datos aportados.
 
         parámetros:
-        - marco: marco de tkinter donde se construirá la tabla.
+        - marco: marco de tkinter donde se construirá la tabla. La tabla se
+          ajustará al tamaño de dicho marco.
         - cabecera: textos para la cabecera. Será una lista con tantos elementos
           como columnas deba tener la tabla.
-        - tabla: datos para el resto de la tabla. Será una lista, donde cada
-          elemento será una lista con tantos elementos como los que tenía la
-          cabecera. 
-        - ancho: ancho mínimo para cada una de las columnas.
-        - ajuste: indica que, si la tabla se hace más grande que la suma de los
+        - datos: datos para el resto de la tabla. Será una diccionario, donde
+          cada clave será el número de fila (no es necesario que vengan
+          ordenados), y el dato será una lista con tantos elementos como los que
+          tenía la cabecera. Si la longitud de alguna de las listas es
+          distinta a la de la cabecera, lanza una excepción de tipo ValueError.
+          Ver función formatear_lista_tabla.
+        - anchos: ancho mínimo en píxeles para cada una de las columnas.
+        - ajuste: indica, si la tabla se hace más grande que la suma de los
           anchos mínimos, cómo se reparte el espacio sobrante:
           - 0: No se redimensiona.
           - 1: Se redimensiona completamente.
           - valores entre 0 y 1: hace que el reparto sea proporcional entre
             cada una de las columnas que tienen un valor distinto de 0.
-        - alto_cabecera
-        - alto_filas
-        - fuente_cabecera
-        - fuente_filas
+        - alto_cabecera, en pñixeles
+        - alto_filas, en píxeles
+        - fuente_cabecera (familia, tamaño, atributos)
+        - fuente_datos (familia, tamaño, atributos)
 
         NOTA: Antes de construir la tabla, se chequea que todos los parámetros
         anteriores tengan el mismo número de elementos. Si no es así, se
@@ -40,14 +51,17 @@ class Tabla(object):
 
         """
 
-        self.marco = marco
-        self.ancho = ancho
+        # Guardamos los anchos de las columnas, ya que lo necesitaremos cada vez
+        # que añadimos una fila nueva.
+        self.ancho = anchos
+        # Guardamos la altura de las filas de datos.
         self.alto_datos = alto_datos
+        # Y la fuente que emplearemos para los datos.
         self.fuente_datos = fuente_datos
         # Comprobamos que todos los argumentos tengan el mismo número de
         # elementos.
         total = len(cabecera)
-        if len(ancho) != total:
+        if len(anchos) != total:
             raise ValueError(
                 "Error tabla: lista de anchos de columnas incorrecta")
         if len(ajuste) != total:
@@ -55,76 +69,141 @@ class Tabla(object):
                 "Error tabla: lista de ajustes de columnas incorrecta")
 
         # Construimos un marco para la cabecera
-        marco_cabecera = tkinter.Frame(self.marco, bg="black")
+        marco_cabecera = tkinter.Frame(marco, bg=COLOR_BORDE)
         marco_cabecera.grid(row=0, column=0, sticky="nsew")
-        # Construimos otro marco para el resto de datos:
-        marco_canvas = tkinter.Frame(self.marco, bg="yellow")
+        # Construimos otro marco para las filas de datos:
+        marco_canvas = tkinter.Frame(marco, bg=COLOR_BORDE)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
-        # marco_canvas.pack(fill=tkinter.BOTH, expand=True)
 
-        # Adapto el ancho del grid al tamaño del contenedor.
+        # Adaptamos el ancho del grid al tamaño del contenedor.
         marco.columnconfigure(index=0, weight=1)
         # Respecto a la altura, fijamos una altura para la cabecera
         # y el resto lo debe ocupar la parte de los datos.
         marco.rowconfigure(index=0, minsize=alto_cabecera)
-        marco.rowconfigure(index=1, minsize=15, weight=1)
+        marco.rowconfigure(index=1, minsize=self.alto_datos, weight=1)
 
         # Creamos un Canvas para añadir la barra de desplazamiento vertical
-        canvas = tkinter.Canvas(marco_canvas, bg="blue")
-        canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+        canvas = tkinter.Canvas(marco_canvas, bg=COLOR_BORDE)
         # Añadimos la barra de deslizamiento.
         barra = tkinter.Scrollbar(
             marco_canvas, orient=tkinter.VERTICAL, command=canvas.yview)
-        barra.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
+        # Ponemos el canvas a la izquierda del marco anterior.
+        # canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+        canvas.grid(row=0, column=0, sticky="nsew")
+        # Y ponemos la barra de desplazamiento a la izquierda.
+        # barra.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        barra.grid(row=0, column=1, sticky="ns")
+        marco_canvas.columnconfigure(0, weight=1)
+        marco_canvas.columnconfigure(1, minsize=barra.winfo_reqwidth())
+        marco_canvas.rowconfigure(0, weight=1)
+        #  Esta instrucción permite que el elemento central del scroll (thumb)
+        # se desplace de acuerdo a la parte visible de la tabla.
         canvas.config(yscrollcommand=barra.set)
 
-        self.marco_tabla = tkinter.Frame(canvas)
-        canvas.create_window((0, 0), window=self.marco_tabla,
-                             anchor="nw", tags="frame")
-
-        # Guardamos la lista de etiquetas que representan las celdas, para
-        # poder acceder a ellas en todo momento.
-        self.controles = {}
-        for fila, valores in datos.items():
-            self.añadir_fila(fila, valores)
+        # Finalmente, construimos el marco donde crearemos la tabla con las
+        # filas de datos.
+        self.marco_tabla = tkinter.Frame(canvas, bg=COLOR_BORDE)
+        canvas.create_window(
+            (0, 0), window=self.marco_tabla, anchor="nw", tags="frame")
 
         # Dentro de la cabecera añadimos los datos.
         for n, dato in enumerate(cabecera):
+            # NOTA: En todos los casos, cada celda está formada por un marco
+            # de tamaño inicial indicado. Esto es necesario, porque es la única
+            # forma que tenemos de especificar el tamaño en píxeles. Si
+            # fijásemos el tamaño de las etiquetas, estas vienen en función del
+            # tamaño de la fuente, y por lo tanto puede variar entre la
+            # cabecera y el reseto de filas.
             marco_aux = tkinter.Frame(
                 marco_cabecera, width=self.ancho[n], height=alto_cabecera)
             marco_aux.grid(row=0, column=n, sticky="nsew", padx=1, pady=1)
+            # Esta instrucción hace que el marco no se expanda si se expande
+            # su contenido, en este caso, en función del texto de la celda.
             marco_aux.pack_propagate(False)
+            # Y añadimos la etiqueta a la cabecera.
             etiqueta_aux = tkinter.Label(
                 marco_aux, bg="blue", text=dato, font=fuente_cabecera)
             etiqueta_aux.pack(fill="both", expand=True)
 
+        # Creación de las filas iniciales. Para ello, en primer lugar,
+        # guardamos la lista de etiquetas que representan las celdas, para
+        # poder acceder a ellas cuando queramos actualizar o borrar filas.
+        self.controles = {}
+        # Y añadimos cada una de las filas.
+        for fila, valores in datos.items():
+            self.añadir_fila(fila, valores)
+
         # Configuramos ambos marcos para que se redimensionen de la misma
         # forma, y por tanto, todas las columntas tengan el mismo tamaño.
-        # Ajustamos los anchos de las columnas para la cabecera.
-        for i in range(len(ancho)):
-            marco_cabecera.columnconfigure(i, weight=ajuste[i])
-        # y lo mismo para el resto de celdas.
-        for i in range(len(ancho)):
+        # Ajustamos los anchos de las columnas para las filas.
+        for i in range(len(anchos)):
             self.marco_tabla.columnconfigure(i, weight=ajuste[i])
+        # Ajustamos los anchos de las columnas para la cabecera.
+        for i in range(len(anchos)):
+            marco_cabecera.columnconfigure(i, weight=ajuste[i])
+        # Añadimos una última columna, del tamaño de la barra de desplazamiento,
+        # para que conserven el mismo tamaño la cabecera y el resto de filas.
+        marco_cabecera.columnconfigure(
+            len(anchos), minsize=barra.winfo_reqwidth(), weight=0)
 
         # Guardamos el ancho actual del marco, que se corresponderá con el
         # ancho mínimo, para que la ventana contenedora se ajuste su valor
-        # míimo a esta medida.
-        self.marco.update_idletasks()
-        self.ancho_tabla = self.marco.winfo_width()
+        # mínimo a esta medida.
+        marco.update_idletasks()
+        self.__ancho_tabla = self.marco_tabla.winfo_reqwidth() + \
+            barra.winfo_reqwidth()
 
-        # Actualizar el tamaño del canvas cuando el contenido cambie
-        def on_frame_configure(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-            # canvas.config(width=self.marco_tabla.winfo_width())  # Establecer el ancho del Canvas al ancho del Frame
+        def teclas_cursor(event):
+            if event.keysym == "Up":
+                canvas.yview_scroll(-1, "units")  # Mover hacia arriba
+            elif event.keysym == "Down":
+                canvas.yview_scroll(1, "units")  # Mover hacia abajo
 
-        self.marco_tabla.bind("<Configure>", on_frame_configure)
+        def rueda_raton(event):
+            if sys.platform == "Windows":  # Windows
+                canvas.yview_scroll(-int(event.delta / 120), "units")
+            elif sys.platform == "Darwin":  # macOS
+                canvas.yview_scroll(-int(event.delta), "units")
+            elif sys.platform == "linux" or sys.platform == "linux2":  # Linux
+                if event.num == 4:
+                    canvas.yview_scroll(-1, "units")  # Scroll up
+                elif event.num == 5:
+                    canvas.yview_scroll(1, "units")  # Scroll down
+        # # Actualizar el tamaño del canvas cuando el contenido cambie
 
-        def onCanvasConfigure(e):
+        def actualizar_tamaño(__):
+            r = canvas.bbox("frame")
+            # NOTA: Comenzamos la región en 1, para evitar que salga una línea
+            # blanca en la parte superior de la tabla.
+            canvas.configure(scrollregion=(0, 1, r[2], r[3]))
             canvas.itemconfig('frame', width=canvas.winfo_width())
 
-        canvas.bind("<Configure>", onCanvasConfigure)
+            # Si el Frame es más pequeño que el Canvas, deshabilita el scroll
+            if self.marco_tabla.winfo_height() <= canvas.winfo_height():
+                # Deshabilita el scroll con la rueda del ratón
+                canvas.unbind_all("<MouseWheel>")
+                canvas.unbind_all("<Button-4>")
+                canvas.unbind_all("<Button-5>")
+                canvas.unbind_all("<Up>")  # Flecha arriba
+                canvas.unbind_all("<Down>")  # Flecha arriba
+                # Desconecta la barra de desplazamiento
+                canvas.config(yscrollcommand="")
+                barra.grid_forget()  # Oculta la barra de desplazamiento
+            else:
+                if sys.platform == "linux" or sys.platform == "linux2":
+                    canvas.bind_all("<Button-4>", rueda_raton)
+                    canvas.bind_all("<Button-5>", rueda_raton)
+                elif sys.platform == "win32" or "darwin":
+                    canvas.bind_all("<MouseWheel>", rueda_raton)
+                canvas.bind_all("<Up>", teclas_cursor)  # Flecha arriba
+                canvas.bind_all("<Down>", teclas_cursor)  # Flecha arriba
+                # Conecta la barra de desplazamiento
+                canvas.config(yscrollcommand=barra.set)
+                barra.grid(row=0, column=1, sticky="ns")
+
+        self.marco_tabla.bind("<Configure>", actualizar_tamaño)
+        canvas.bind("<Configure>", actualizar_tamaño)
 
     def refrescar(self, datos):
         """
@@ -156,7 +235,6 @@ class Tabla(object):
             self.refrescar_fila(f, datos[f])
 
     def añadir_fila(self, fila, valores):
-
         if fila in self.controles:
             raise ValueError("Fila repetida")
 
@@ -224,3 +302,8 @@ class Tabla(object):
             # Añadimos la nueva fila a la lista formateada.
             filas[orden] = dato[1:]
         return filas
+
+    def get_ancho_tabla(self):
+        return self.__ancho_tabla
+
+    ancho_tabla = property(get_ancho_tabla, None, None, None)
