@@ -61,9 +61,9 @@ lista = bd.equipos_registrados()
 tabla_equipos = Tabla(tabla, cabecera, ancho, ajuste, alineacion,
                       50, 45, fuente_cabecera, fuente_datos)
 
-tabla_equipos.añadir_evento("<Double-Button-1>", 2, evento)
-tabla_equipos.añadir_evento("<Double-Button-1>", 3, evento)
-tabla_equipos.añadir_evento("<Double-Button-1>", 4, evento)
+tabla_equipos.añadir_evento("<Double-1>", 2, evento)
+tabla_equipos.añadir_evento("<Double-1>", 3, evento)
+tabla_equipos.añadir_evento("<Double-1>", 4, evento)
 
 lista = Tabla.formatear_lista_tabla(lista)
 tabla_equipos.refrescar(lista)
