@@ -17,22 +17,18 @@ COLOR_BORDE = "black"
 
 class Tabla(object):
 
-    def __init__(self, marco, cabecera, datos, anchos, ajuste, alto_cabecera,
-                 alto_datos, fuente_cabecera, fuente_datos):
+    #    def __init__(self, marco, cabecera, datos, anchos, ajuste, alto_cabecera,
+    #                 alto_datos, fuente_cabecera, fuente_datos):
+    def __init__(self, marco, cabecera, ancho, ajuste, alineacion, alto_cabecera,
+                 alto_datos, fuente_cabecera=None, fuente_datos=None):
         """
-        Construye una tabla, y la rellena con los datos aportados.
+        Construcción de la tabla, y configuración.
 
         parámetros:
         - marco: marco de tkinter donde se construirá la tabla. La tabla se
           ajustará al tamaño de dicho marco.
         - cabecera: textos para la cabecera. Será una lista con tantos elementos
           como columnas deba tener la tabla.
-        - datos: datos para el resto de la tabla. Será una diccionario, donde
-          cada clave será el número de fila (no es necesario que vengan
-          ordenados), y el dato será una lista con tantos elementos como los que
-          tenía la cabecera. Si la longitud de alguna de las listas es
-          distinta a la de la cabecera, lanza una excepción de tipo ValueError.
-          Ver función formatear_lista_tabla.
         - anchos: ancho mínimo en píxeles para cada una de las columnas.
         - ajuste: indica, si la tabla se hace más grande que la suma de los
           anchos mínimos, cómo se reparte el espacio sobrante:
@@ -40,7 +36,9 @@ class Tabla(object):
           - 1: Se redimensiona completamente.
           - valores entre 0 y 1: hace que el reparto sea proporcional entre
             cada una de las columnas que tienen un valor distinto de 0.
-        - alto_cabecera, en pñixeles
+        - alineacion: alineación del texto para cada columna (izquierda,
+          derecha, centrado).
+        - alto_cabecera, en pixeles
         - alto_filas, en píxeles
         - fuente_cabecera (familia, tamaño, atributos)
         - fuente_datos (familia, tamaño, atributos)
@@ -51,22 +49,26 @@ class Tabla(object):
 
         """
 
-        # Guardamos los anchos de las columnas, ya que lo necesitaremos cada vez
-        # que añadimos una fila nueva.
-        self.ancho = anchos
-        # Guardamos la altura de las filas de datos.
+        # Guardamos los datos de configuración de la tabla.
+        # Ancho de las columnas.
+        self.ancho = ancho
+        # Guardamos la altura de las filas.
         self.alto_datos = alto_datos
-        # Y la fuente que emplearemos para los datos.
+        self.alto_cabecera = alto_cabecera
+        # Y las fuentes para los textos.
         self.fuente_datos = fuente_datos
+        self.fuente_cabecera = fuente_cabecera
+        # Guardamos la forma de alinear el texto de las etiquetas.
+        self.alineacion = alineacion
         # Comprobamos que todos los argumentos tengan el mismo número de
         # elementos.
-        total = len(cabecera)
-        if len(anchos) != total:
-            raise ValueError(
-                "Error tabla: lista de anchos de columnas incorrecta")
-        if len(ajuste) != total:
+        self.columnas = len(ancho)
+        if len(ajuste) != self.columnas:
             raise ValueError(
                 "Error tabla: lista de ajustes de columnas incorrecta")
+        if len(alineacion) != self.columnas:
+            raise ValueError(
+                "Error tabla: lista de alineación de columnas incorrecta")
 
         # Construimos un marco para la cabecera
         marco_cabecera = tkinter.Frame(marco, bg=COLOR_BORDE)
@@ -89,10 +91,8 @@ class Tabla(object):
             marco_canvas, orient=tkinter.VERTICAL, command=canvas.yview)
 
         # Ponemos el canvas a la izquierda del marco anterior.
-        # canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
         canvas.grid(row=0, column=0, sticky="nsew")
         # Y ponemos la barra de desplazamiento a la izquierda.
-        # barra.pack(side=tkinter.RIGHT, fill=tkinter.Y)
         barra.grid(row=0, column=1, sticky="ns")
         marco_canvas.columnconfigure(0, weight=1)
         marco_canvas.columnconfigure(1, minsize=barra.winfo_reqwidth())
@@ -107,8 +107,13 @@ class Tabla(object):
         canvas.create_window(
             (0, 0), window=self.marco_tabla, anchor="nw", tags="frame")
 
+        # Creación de las filas iniciales. Para ello, en primer lugar,
+        # guardamos la lista de etiquetas que representan las celdas, para
+        # poder acceder a ellas cuando queramos actualizar o borrar filas.
+        self.controles = {}
+
         # Dentro de la cabecera añadimos los datos.
-        for n, dato in enumerate(cabecera):
+        for col, dato in enumerate(cabecera):
             # NOTA: En todos los casos, cada celda está formada por un marco
             # de tamaño inicial indicado. Esto es necesario, porque es la única
             # forma que tenemos de especificar el tamaño en píxeles. Si
@@ -116,8 +121,8 @@ class Tabla(object):
             # tamaño de la fuente, y por lo tanto puede variar entre la
             # cabecera y el reseto de filas.
             marco_aux = tkinter.Frame(
-                marco_cabecera, width=self.ancho[n], height=alto_cabecera)
-            marco_aux.grid(row=0, column=n, sticky="nsew", padx=1, pady=1)
+                marco_cabecera, width=self.ancho[col], height=alto_cabecera)
+            marco_aux.grid(row=0, column=col, sticky="nsew", padx=1, pady=1)
             # Esta instrucción hace que el marco no se expanda si se expande
             # su contenido, en este caso, en función del texto de la celda.
             marco_aux.pack_propagate(False)
@@ -126,33 +131,20 @@ class Tabla(object):
                 marco_aux, bg="blue", text=dato, font=fuente_cabecera)
             etiqueta_aux.pack(fill="both", expand=True)
 
-        # Creación de las filas iniciales. Para ello, en primer lugar,
-        # guardamos la lista de etiquetas que representan las celdas, para
-        # poder acceder a ellas cuando queramos actualizar o borrar filas.
-        self.controles = {}
-        # Y añadimos cada una de las filas.
-        for fila, valores in datos.items():
-            self.añadir_fila(fila, valores)
-
-        # Configuramos ambos marcos para que se redimensionen de la misma
-        # forma, y por tanto, todas las columntas tengan el mismo tamaño.
-        # Ajustamos los anchos de las columnas para las filas.
-        for i in range(len(anchos)):
-            self.marco_tabla.columnconfigure(i, weight=ajuste[i])
-        # Ajustamos los anchos de las columnas para la cabecera.
-        for i in range(len(anchos)):
-            marco_cabecera.columnconfigure(i, weight=ajuste[i])
+            # Ajustamos los anchos de las columnas para las filas.
+            self.marco_tabla.columnconfigure(col, weight=ajuste[col])
+            # Ajustamos los anchos de las columnas para la cabecera.
+            marco_cabecera.columnconfigure(col, weight=ajuste[col])
         # Añadimos una última columna, del tamaño de la barra de desplazamiento,
         # para que conserven el mismo tamaño la cabecera y el resto de filas.
         marco_cabecera.columnconfigure(
-            len(anchos), minsize=barra.winfo_reqwidth(), weight=0)
+            self.columnas, minsize=barra.winfo_reqwidth(), weight=0)
 
         # Guardamos el ancho actual del marco, que se corresponderá con el
         # ancho mínimo, para que la ventana contenedora se ajuste su valor
         # mínimo a esta medida.
         marco.update_idletasks()
-        self.__ancho_tabla = self.marco_tabla.winfo_reqwidth() + \
-            barra.winfo_reqwidth()
+        self.__ancho_tabla = marco_cabecera.winfo_reqwidth()
 
         def teclas_cursor(event):
             if event.keysym == "Up":
@@ -205,6 +197,13 @@ class Tabla(object):
         self.marco_tabla.bind("<Configure>", actualizar_tamaño)
         canvas.bind("<Configure>", actualizar_tamaño)
 
+#        - datos: datos para el resto de la tabla. Será una diccionario, donde
+#          cada clave será el número de fila (no es necesario que vengan
+#          ordenados), y el dato será una lista con tantos elementos como los que
+#          tenía la cabecera. Si la longitud de alguna de las listas es
+#          distinta a la de la cabecera, lanza una excepción de tipo ValueError.
+#          Ver función formatear_lista_tabla.
+
     def refrescar(self, datos):
         """
         Actualizar los datos de la tabla. La función debe recibir los datos
@@ -238,6 +237,10 @@ class Tabla(object):
         if fila in self.controles:
             raise ValueError("Fila repetida")
 
+        if len(valores) != self.columnas:
+            raise ValueError(
+                "Error añadir fila: número de datos incorrecto")
+
         fila_celdas = []
         fila_marcos = []
         for col, dato in enumerate(valores):
@@ -247,8 +250,10 @@ class Tabla(object):
                 row=fila, column=col, sticky="nsew", padx=1, pady=1)
             marco_celda.pack_propagate(False)
             etiqueta_celda = tkinter.Label(
-                marco_celda, bg="gray", text=dato, font=self.fuente_datos)
-            etiqueta_celda.pack(fill="both", expand=True)
+                marco_celda, bg="gray", text=dato, font=self.fuente_datos,
+                anchor=self.alineacion[col], padx=10)
+            # self.alineacion[col])
+            etiqueta_celda.pack(fill=tkinter.BOTH, expand=True)
 
             fila_celdas += [etiqueta_celda]
             fila_marcos += [marco_celda]
