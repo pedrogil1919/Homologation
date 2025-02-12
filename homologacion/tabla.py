@@ -8,6 +8,7 @@ base de datos.
 '''
 
 
+from functools import partial
 import sys
 import tkinter
 
@@ -17,8 +18,6 @@ COLOR_BORDE = "black"
 
 class Tabla(object):
 
-    #    def __init__(self, marco, cabecera, datos, anchos, ajuste, alto_cabecera,
-    #                 alto_datos, fuente_cabecera, fuente_datos):
     def __init__(self, marco, cabecera, ancho, ajuste, alineacion, alto_cabecera,
                  alto_datos, fuente_cabecera=None, fuente_datos=None):
         """
@@ -107,11 +106,6 @@ class Tabla(object):
         canvas.create_window(
             (0, 0), window=self.marco_tabla, anchor="nw", tags="frame")
 
-        # Creación de las filas iniciales. Para ello, en primer lugar,
-        # guardamos la lista de etiquetas que representan las celdas, para
-        # poder acceder a ellas cuando queramos actualizar o borrar filas.
-        self.controles = {}
-
         # Dentro de la cabecera añadimos los datos.
         for col, dato in enumerate(cabecera):
             # NOTA: En todos los casos, cada celda está formada por un marco
@@ -197,12 +191,12 @@ class Tabla(object):
         self.marco_tabla.bind("<Configure>", actualizar_tamaño)
         canvas.bind("<Configure>", actualizar_tamaño)
 
-#        - datos: datos para el resto de la tabla. Será una diccionario, donde
-#          cada clave será el número de fila (no es necesario que vengan
-#          ordenados), y el dato será una lista con tantos elementos como los que
-#          tenía la cabecera. Si la longitud de alguna de las listas es
-#          distinta a la de la cabecera, lanza una excepción de tipo ValueError.
-#          Ver función formatear_lista_tabla.
+        # Guardamos la lista de etiquetas que representan las celdas, para
+        # poder acceder a ellas cuando queramos actualizar o borrar filas.
+        self.__controles = {}
+        # Creamos una lista de todos los eventos que tenemos que añaidr e las
+        # celdas de las tablas.
+        self.__eventos = {}
 
     def refrescar(self, datos):
         """
@@ -216,7 +210,7 @@ class Tabla(object):
         # Determinamos las filas que existn en datos y no en controles, es
         # decir, las nuevas filas añadidas. Para ello, convertimos los
         # diccionarios en sets.
-        s1 = set(self.controles.keys())
+        s1 = set(self.__controles.keys())
         s2 = set(datos.keys())
         añadir = s2 - s1
         borrar = s1 - s2
@@ -234,7 +228,8 @@ class Tabla(object):
             self.refrescar_fila(f, datos[f])
 
     def añadir_fila(self, fila, valores):
-        if fila in self.controles:
+
+        if fila in self.__controles:
             raise ValueError("Fila repetida")
 
         if len(valores) != self.columnas:
@@ -254,28 +249,47 @@ class Tabla(object):
                 anchor=self.alineacion[col], padx=10)
             # self.alineacion[col])
             etiqueta_celda.pack(fill=tkinter.BOTH, expand=True)
+            for ev in self.__eventos.get(col, []):
+                evento = ev[0]
+                funcion = ev[1]
+                etiqueta_celda.bind(evento, partial(funcion, fila, col))
 
             fila_celdas += [etiqueta_celda]
             fila_marcos += [marco_celda]
-        self.controles[fila] = {"L": fila_celdas, "F": fila_marcos}
+        self.__controles[fila] = {"L": fila_celdas, "F": fila_marcos}
 
     def borrar_fila(self, fila):
         try:
-            controles = self.controles[fila]
+            controles = self.__controles[fila]
         except KeyError:
             return
         for control in controles['F']:
             control.destroy()
-        del self.controles[fila]
+        del self.__controles[fila]
 
     def refrescar_fila(self, fila, valores):
         try:
-            controles = self.controles[fila]
+            controles = self.__controles[fila]
         except KeyError:
             raise ValueError("Fila a actualizar no existe.")
 
         for control, dato in zip(controles['L'], valores):
             control.config(text=dato)
+
+    def añadir_evento(self, evento, columna, funcion):
+        """
+        Añade un evento en una columna determinada para todas las filas
+        existentes y las nuevas a añadir.
+
+        """
+        try:
+            self.__eventos[columna] += [(evento, funcion)]
+        except KeyError:
+            self.__eventos[columna] = [(evento, funcion)]
+
+        for fila, controles in self.__controles.items():
+            controles['L'][columna].bind(
+                evento, partial(funcion, fila, columna))
 
     @staticmethod
     def formatear_lista_tabla(datos):

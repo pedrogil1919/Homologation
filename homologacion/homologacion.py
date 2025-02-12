@@ -22,6 +22,10 @@ def refrescar_tabla():
     tabla_equipos.refrescar(lista)
 
 
+def evento(fila, columna, evento=None):
+    print(fila, columna)
+
+
 # Ventana principal
 ventana_principal = tkinter.Tk()
 
@@ -56,6 +60,11 @@ fuente_datos = ("HELVETICA", 15, "bold")
 lista = bd.equipos_registrados()
 tabla_equipos = Tabla(tabla, cabecera, ancho, ajuste, alineacion,
                       50, 45, fuente_cabecera, fuente_datos)
+
+tabla_equipos.añadir_evento("<Double-Button-1>", 2, evento)
+tabla_equipos.añadir_evento("<Double-Button-1>", 3, evento)
+tabla_equipos.añadir_evento("<Double-Button-1>", 4, evento)
+
 lista = Tabla.formatear_lista_tabla(lista)
 tabla_equipos.refrescar(lista)
 
