@@ -16,6 +16,8 @@ import tkinter
 BORDE = "black"
 FONDO_CABECERA = "LightBlue1"
 TEXTO_CABECERA = "gray42"
+FONDO_DATOS = "wheat1"
+TEXTO_DATOS = "black"
 
 
 class Tabla(object):
@@ -173,7 +175,7 @@ class Tabla(object):
             r = canvas.bbox("frame")
             # NOTA: Comenzamos la región en 1, para evitar que salga una línea
             # blanca en la parte superior de la tabla.
-            canvas.configure(scrollregion=(0, 1, r[2], r[3]))
+            canvas.configure(scrollregion=(1, 1, r[2], r[3]))
             # Hacemos que el ancho del frame donde se crea la tabla se ajuste
             # al ancho del canvas donde lo hemos añadido.
             canvas.itemconfig('frame', width=canvas.winfo_width())
@@ -272,7 +274,8 @@ class Tabla(object):
                 row=fila, column=col, sticky="nsew", padx=1, pady=1)
             marco_celda.pack_propagate(False)
             etiqueta_celda = tkinter.Label(
-                marco_celda, bg="gray", text=dato, font=self.fuente_datos,
+                marco_celda, bg=FONDO_DATOS, fg=TEXTO_DATOS,
+                text=dato, font=self.fuente_datos,
                 anchor=self.alineacion[col], padx=10)
             etiqueta_celda.pack(fill=tkinter.BOTH, expand=True)
             # comprobamos si hay que añadir también eventos a la etiueta.

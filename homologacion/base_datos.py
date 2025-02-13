@@ -4,7 +4,22 @@ Created on 4 feb 2025
 @author: pedrogil
 '''
 
+from enum import IntEnum
+
 import mariadb
+
+
+class estado(IntEnum):
+    INSCRITO = 1
+    REGISTRADO = 2
+    HOMOLOGADO = 3
+
+
+# Nombre de la vista en la que aparece en función del estado del equipo.
+ESTADO = {
+    1: "ListaEquiposRegistrados",
+    2: "ListaEquiposInscritos",
+    3: "ListaEquiposHomologados"}
 
 
 class Conexion():
@@ -38,15 +53,17 @@ class Conexion():
         """
         return "%s (%s) - Usuario: %s" % (self.__database, self.__host, self.__user)
 
-    def equipos_registrados(self):
+    def lista_equipos(self, estado):
         self.__conexion.rollback()
-        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
-        cursor.execute("SELECT * FROM ListaEquiposHomologacion")
+        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
+        # cursor.execute("SELECT * FROM ListaEquiposInscritos")
+        cursor.execute("SELECT * FROM %s" % ESTADO[estado])
         equipos = cursor.fetchall()
         return equipos
 
     def cabecera_vista_equipos(self):
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
-        cursor.execute("SHOW COLUMNS FROM ListaEquiposHomologacion")
-        cabecera = cursor.fetchall()
-        return cabecera[1:]
+        cursor.execute("SHOW COLUMNS FROM ListaEquiposRegistrados")
+        lista_cabecera = cursor.fetchall()
+        cabecera = [columna["Field"] for columna in lista_cabecera[1:]]
+        return cabecera
