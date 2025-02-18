@@ -17,9 +17,9 @@ class estado(IntEnum):
 
 # Nombre de la vista en la que aparece en función del estado del equipo.
 ESTADO = {
-    1: "ListaEquiposRegistrados",
-    2: "ListaEquiposInscritos",
-    3: "ListaEquiposHomologados"}
+    1: (0, 0),
+    2: (1, 0),
+    3: (1, 1)}
 
 
 class Conexion():
@@ -80,15 +80,72 @@ class Conexion():
 
     def lista_equipos(self, estado):
         self.__conexion.rollback()
-        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
+        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         # cursor.execute("SELECT * FROM ListaEquiposInscritos")
-        cursor.execute("SELECT * FROM %s" % ESTADO[estado])
+        cursor.execute("SELECT * FROM ListaEquipos WHERE "
+                       "registrado = %s AND homologado = %s" % ESTADO[estado])
         equipos = cursor.fetchall()
         return equipos
 
-    def cabecera_vista_equipos(self):
+    def configuracion_tabla(self):
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
-        cursor.execute("SHOW COLUMNS FROM ListaEquiposRegistrados")
-        lista_cabecera = cursor.fetchall()
-        cabecera = [columna["Field"] for columna in lista_cabecera[1:]]
-        return cabecera
+        cursor.execute("SELECT * FROM ConfigVistaListaEquipos")
+        lista = cursor.fetchall()
+        cabecera = [fila["nombre"] for fila in lista]
+        ancho = [fila["ancho"] for fila in lista]
+        alineacion = [fila["alineacion"] for fila in lista]
+        ajuste = [fila["ajuste"] for fila in lista]
+
+        return cabecera, ancho, alineacion, ajuste
+
+    def configuracion_eventos(self):
+        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor.execute("SELECT zona FROM ConfigVistaListaEquipos")
+        lista = cursor.fetchall()
+        eventos = [fila[0] for fila in lista]
+
+        return eventos
+
+    def datos_equipo(self, equipo):
+        """
+        Obtiene los datos del equipo a partir de su ID
+
+        """
+        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor.execute(
+            "SELECT ID_EQUIPO, equipo FROM ListaEquipos WHERE ORDEN = %s", (equipo,))
+
+        nombre = cursor.fetchone()
+        return nombre[0], nombre[1]
+
+    def lista_puntos_homologacion(self, equipo, zona):
+        cursor = self.__conexion.cursor(dictionary=True, prepared=True)
+        cursor.execute(
+            "SELECT * FROM ListaPuntosHomologacion WHERE "
+            "ID_EQUIPO = %s AND FK_HOMOLOGACION_ZONA = %s", (equipo, zona))
+
+        lista = cursor.fetchall()
+        return lista
+
+    def actualizar_putno_homologacion(self, equipo, punto, zona):
+        cursor1 = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor2 = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor1.execute(
+            "SELECT valor FROM ListaPuntosHomologacion WHERE "
+            "ID_EQUIPO = %s AND ID_HOMOLOGACION_PUNTO = %s AND "
+            "FK_HOMOLOGACION_ZONA = %s", (equipo, punto, zona))
+
+        if cursor1.rowcount != 1:
+            raise RuntimeError("Error al actualizar punto de homoloación.")
+        valor = cursor1.fetchone()[0]
+
+        valor = 0 if valor == 1 else 1
+        cursor2.execute(
+            "UPDATE HomologacionEquipo SET valor = %s WHERE "
+            "FK_EQUIPO = %s AND FK_HOMOLOGACION_PUNTO = %s AND "
+            "FK_HOMOLOGACION_ZONA = %s", (valor, equipo, punto, zona))
+
+        if cursor2.affected_rows != 1:
+            raise RuntimeError("Error al actualizar punto de homoloación.")
+
+        return valor
