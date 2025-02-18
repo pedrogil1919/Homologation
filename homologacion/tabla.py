@@ -19,6 +19,11 @@ TEXTO_CABECERA = "gray42"
 FONDO_DATOS = "wheat1"
 TEXTO_DATOS = "black"
 
+ANCHOR = {
+    "C": "center",
+    "L": "w",
+    "R": "e"}
+
 
 class Tabla(object):
 
@@ -276,7 +281,7 @@ class Tabla(object):
             etiqueta_celda = tkinter.Label(
                 marco_celda, bg=FONDO_DATOS, fg=TEXTO_DATOS,
                 text=dato, font=self.fuente_datos,
-                anchor=self.alineacion[col], padx=10)
+                anchor=ANCHOR[self.alineacion[col]], padx=10)
             etiqueta_celda.pack(fill=tkinter.BOTH, expand=True)
             # comprobamos si hay que añadir también eventos a la etiueta.
             for ev in self.__eventos.get(col, []):
