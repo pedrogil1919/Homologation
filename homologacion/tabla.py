@@ -294,7 +294,7 @@ class Tabla(object):
             for ev in self.__eventos.get(col, []):
                 evento = ev[0]
                 funcion = ev[1]
-                etiqueta_celda.bind(evento, partial(funcion, fila, col))
+                etiqueta_celda.bind(evento, partial(funcion, fila))
 
             fila_celdas += [etiqueta_celda]
             fila_marcos += [marco_celda]
@@ -343,7 +343,7 @@ class Tabla(object):
 
         for fila, controles in self.__controles.items():
             controles['L'][columna].bind(
-                evento, partial(funcion, fila, columna))
+                evento, partial(funcion, fila))
 
     @staticmethod
     def formatear_lista_tabla(datos):
