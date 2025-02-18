@@ -16,6 +16,7 @@ import tkinter
 BORDE = "black"
 FONDO_CABECERA = "LightBlue1"
 TEXTO_CABECERA = "gray42"
+FONDO_CANVAS = "gray90"
 FONDO_DATOS = "wheat1"
 TEXTO_DATOS = "black"
 
@@ -93,7 +94,7 @@ class Tabla(object):
 
         # Creamos un Canvas para que se pueda añadir una barra de desplazamiento
         # vertical cuando el número de filas sea grande.
-        canvas = tkinter.Canvas(marco_canvas, bg=BORDE)
+        canvas = tkinter.Canvas(marco_canvas, bg=FONDO_CANVAS)
         # Añadimos la barra de deslizamiento.
         barra = tkinter.Scrollbar(
             marco_canvas, orient=tkinter.VERTICAL, command=canvas.yview)
@@ -157,6 +158,7 @@ class Tabla(object):
 
         #  Definición de eventos relacionados con el desplazamiento vertical
         # de la tabla cuando existen más filas de las que caben.
+
         def teclas_cursor(event):
             # Desplazamiento con las teclas de cursor.
             if event.keysym == "Up":
