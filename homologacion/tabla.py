@@ -235,6 +235,7 @@ class Tabla(object):
         valores de las etiquetas.
 
         """
+        total = len(self.__controles)
         # Determinamos las filas que existn en datos y no en controles, es
         # decir, las nuevas filas añadidas. Para ello, convertimos los
         # diccionarios en sets.
@@ -257,6 +258,12 @@ class Tabla(object):
         # Actualizamos el resto de filas.
         for f in actualizar:
             self.refrescar_fila(f, datos[f])
+
+        # Solo si hay un cambio en el número de filas, refrescamos el tamaño
+        # de la tabla, ya que en ocasiones la actualización no se produce.
+        if len(self.__controles) != total:
+            self.marco_tabla.update_idletasks()
+            self.marco_tabla.event_generate("<Configure>")
 
     def añadir_fila(self, fila, valores):
         """
