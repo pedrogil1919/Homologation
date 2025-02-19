@@ -8,8 +8,9 @@ import sys
 import tkinter
 
 import base_datos
-# from pagina_edicion import Pagina
 from tabla_equipos import TablaEquipos
+
+# Función para refrescar los datos de la tabla de forma periódica.
 
 
 def temporizador_refrescar():
@@ -17,6 +18,7 @@ def temporizador_refrescar():
     tabla_equipos.refrescar_tabla()
 
 
+# Abrir conexión.
 bd = base_datos.Conexion(
     "homologador",
     "homologador",
@@ -27,8 +29,8 @@ bd = base_datos.Conexion(
 ventana_principal = tkinter.Tk()
 
 # Creamos una cabecera para la aplicación.
-cab = tkinter.Frame(ventana_principal, bg="green", height=50)
-cab.grid(row=0, column=0, sticky="nsew", columnspan=2)
+cabecera = tkinter.Frame(ventana_principal, bg="green", height=50)
+cabecera.grid(row=0, column=0, sticky="nsew", columnspan=2)
 
 # Creamos un marco donde colocar la tabla
 tabla = tkinter.Frame(ventana_principal, bg="yellow")
@@ -38,12 +40,16 @@ tabla.grid(row=1, column=0, sticky="nsew")
 puntos = tkinter.Frame(ventana_principal, bg="blue")
 puntos.grid(row=1, column=1, sticky="nsew")
 
-ventana_principal.columnconfigure(0, weight=1)
-ventana_principal.columnconfigure(1, weight=3)
+# Configuración del ajuste de tamaños.
+ventana_principal.columnconfigure(0, weight=0)
+ventana_principal.columnconfigure(1, weight=1)
 ventana_principal.rowconfigure(1, weight=1)
 
-tabla_equipos = TablaEquipos(bd, tabla)
+# Crear objeto donde se colocará la tabla de equipos.
+tabla_equipos = TablaEquipos(tabla, bd, puntos)
 
+# Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
+# equipos.
 ventana_principal.minsize(tabla_equipos.ancho, 300)
 
 # Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
@@ -55,6 +61,7 @@ elif sys.platform == "darwin":
 elif sys.platform == "win32":
     ventana_principal.state('zoomed')
 
+# Activamos el temporizador.
 temporizador_refrescar()
 
 ventana_principal.mainloop()
