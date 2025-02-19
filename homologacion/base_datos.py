@@ -8,6 +8,8 @@ from enum import IntEnum
 
 import mariadb
 
+# Valores del filtro de la tabla de equipos.
+
 
 class estado(IntEnum):
     TODOS = 1
@@ -16,7 +18,7 @@ class estado(IntEnum):
     HOMOLOGADO = 4
 
 
-# Nombre de la vista en la que aparece en función del estado del equipo.
+# Códigos necesarios para realizar el filtro de la tabla de equipos.
 ESTADO = {
     1: ((0, 1), (0, 1)),
     2: ((0,), (1, 0)),
@@ -115,9 +117,13 @@ class Conexion():
         return estado_actual
 
     def lista_equipos(self, estado):
-        # self.__conexion.rollback()
+        """
+        Obtiene la lista de equipos filtrados por el valor de estado
+
+        Ver definición del tipo enumerado "estado"
+
+        """
         cursor = self.__conexion.cursor(dictionary=False, prepared=False)
-        # cursor.execute("SELECT * FROM ListaEquiposInscritos")
         filtro_registrado = ESTADO[estado][0]
         filtro_homologado = ESTADO[estado][1]
         consulta = "SELECT * FROM ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
@@ -127,6 +133,11 @@ class Conexion():
         return equipos
 
     def configuracion_tabla(self):
+        """
+        Obtener los datos de configuración de la tabla de visualización
+
+        Ver tabla "ConfigVistaListaEquipos"
+        """
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
         cursor.execute("SELECT * FROM ConfigVistaListaEquipos")
         lista = cursor.fetchall()
@@ -138,6 +149,11 @@ class Conexion():
         return cabecera, ancho, alineacion, ajuste
 
     def configuracion_eventos(self):
+        """
+        Obtener los datos de configuración de eventos para la tabla
+
+        Ver tabla "ConfigVistaListaEquipos"
+        """
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor.execute("SELECT zona FROM ConfigVistaListaEquipos")
         lista = cursor.fetchall()
@@ -147,17 +163,22 @@ class Conexion():
 
     def datos_equipo(self, equipo):
         """
-        Obtiene los datos del equipo a partir de su ID
+        Obtiene los datos del equipo a partir de la fila en la tabla
 
         """
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor.execute(
-            "SELECT ID_EQUIPO, equipo FROM ListaEquipos WHERE ORDEN = %s", (equipo,))
+            "SELECT ID_EQUIPO, equipo FROM ListaEquipos WHERE ORDEN = %s",
+            (equipo,))
 
         nombre = cursor.fetchone()
         return nombre[0], nombre[1]
 
     def lista_puntos_homologacion(self, equipo, zona):
+        """
+        Obtiene la lista de puntos de homologación para la zona indicada.
+
+        """
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
         cursor.execute(
             "SELECT * FROM ListaPuntosHomologacion WHERE "
@@ -167,24 +188,28 @@ class Conexion():
         return lista
 
     def actualizar_putno_homologacion(self, equipo, punto, zona):
-        cursor1 = self.__conexion.cursor(dictionary=False, prepared=True)
-        cursor2 = self.__conexion.cursor(dictionary=False, prepared=True)
-        cursor1.execute(
+        """
+        Alterna el valor de un punto de homologación entre True y False
+
+        """
+        cursor_get = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor_set = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor_get.execute(
             "SELECT valor FROM ListaPuntosHomologacion WHERE "
             "ID_EQUIPO = %s AND ID_HOMOLOGACION_PUNTO = %s AND "
             "FK_HOMOLOGACION_ZONA = %s", (equipo, punto, zona))
 
-        if cursor1.rowcount != 1:
+        if cursor_get.rowcount != 1:
             raise RuntimeError("Error al actualizar punto de homoloación.")
-        valor = cursor1.fetchone()[0]
+        valor = cursor_get.fetchone()[0]
 
         valor = 0 if valor == 1 else 1
-        cursor2.execute(
+        cursor_set.execute(
             "UPDATE HomologacionEquipo SET valor = %s WHERE "
             "FK_EQUIPO = %s AND FK_HOMOLOGACION_PUNTO = %s AND "
             "FK_HOMOLOGACION_ZONA = %s", (valor, equipo, punto, zona))
 
-        if cursor2.affected_rows != 1:
+        if cursor_set.affected_rows != 1:
             raise RuntimeError("Error al actualizar punto de homoloación.")
 
         return valor
