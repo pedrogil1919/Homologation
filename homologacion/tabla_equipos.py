@@ -150,4 +150,8 @@ class TablaEquipos(object):
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla
 
+    def get_edicion(self):
+        return self.__pagina_edicion is not None
+
     ancho = property(get_ancho, None, None, None)
+    edicion = property(get_edicion, None, None, None)
