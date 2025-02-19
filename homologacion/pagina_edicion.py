@@ -10,6 +10,9 @@ homologación, en función de la zona y el equipo.
 from functools import partial
 import tkinter
 
+import mariadb
+
+
 COLOR_SI = "PaleGreen1"
 COLOR_NO = "coral1"
 
@@ -93,8 +96,11 @@ class Pagina(object):
 
         """
         # Alternamos el valor del punto de homologación.
-        valor = self.__conexion.actualizar_putno_homologacion(
-            self.__equipo, punto, self.__zona)
+        try:
+            valor = self.__conexion.actualizar_putno_homologacion(
+                self.__equipo, punto, self.__zona)
+        except mariadb.OperationalError as e:
+            tkinter.messagebox.showerror("Error en los datos del equipo", e)
         # Y al mismo tiempo determinamos el color con el que representarlo en
         # la página.
         color = COLOR_SI if valor == 0 else COLOR_NO
