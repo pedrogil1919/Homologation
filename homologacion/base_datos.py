@@ -10,16 +10,18 @@ import mariadb
 
 
 class estado(IntEnum):
-    INSCRITO = 1
-    REGISTRADO = 2
-    HOMOLOGADO = 3
+    TODOS = 1
+    INSCRITO = 2
+    REGISTRADO = 3
+    HOMOLOGADO = 4
 
 
 # Nombre de la vista en la que aparece en función del estado del equipo.
 ESTADO = {
-    1: (0, 0),
-    2: (1, 0),
-    3: (1, 1)}
+    1: ((0, 1), (0, 1)),
+    2: ((0,), (1, 0)),
+    3: ((1,), (0,)),
+    4: ((1,), (1,))}
 
 
 class Conexion():
@@ -79,11 +81,14 @@ class Conexion():
         self.__conexion.commit()
 
     def lista_equipos(self, estado):
-        self.__conexion.rollback()
-        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
+        # self.__conexion.rollback()
+        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
         # cursor.execute("SELECT * FROM ListaEquiposInscritos")
-        cursor.execute("SELECT * FROM ListaEquipos WHERE "
-                       "registrado = %s AND homologado = %s" % ESTADO[estado])
+        filtro_registrado = ESTADO[estado][0]
+        filtro_homologado = ESTADO[estado][1]
+        consulta = "SELECT * FROM ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
+            format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
+        cursor.execute(consulta)
         equipos = cursor.fetchall()
         return equipos
 
