@@ -90,7 +90,7 @@ class Tabla(object):
         # Respecto a la altura, fijamos una altura para la cabecera
         # y el resto lo debe ocupar la parte de los datos.
         marco.rowconfigure(index=0, minsize=alto_cabecera, weight=0)
-        marco.rowconfigure(index=1, minsize=self.alto_datos, weight=1)
+        marco.rowconfigure(index=1, weight=1)
 
         # Creamos un Canvas para que se pueda añadir una barra de desplazamiento
         # vertical cuando el número de filas sea grande.
@@ -180,6 +180,20 @@ class Tabla(object):
 
         def actualizar_tamaño(__):
             r = canvas.bbox("frame")
+
+            # Si la tabla se queda sin datos, el tamaño del marco no se
+            # actualiza, con lo que no se genera el evento de redimensionamiento
+            # y por tanto no se queda con su altura igual a 0
+            if len(self.__controles) == 0:
+                # Fijamos su tamaño a 1 píxel, para que se siga representando
+                # el borde.
+                canvas.itemconfig('frame', height=1)
+            else:
+                # Fijamos su tamaño al ancho que requiere (si no hacemos esto,
+                # una vez se ejecute la instrucción del if, siempre se queda
+                # en tamaño igual a 1.
+                canvas.itemconfig(
+                    'frame', height=self.marco_tabla.winfo_reqheight())
             # NOTA: Comenzamos la región en 1, para evitar que salga una línea
             # blanca en la parte superior de la tabla.
             canvas.configure(scrollregion=(1, 1, r[2], r[3]))
