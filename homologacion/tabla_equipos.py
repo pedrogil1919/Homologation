@@ -4,6 +4,9 @@ Created on 18 feb 2025
 Clase para gestionar los datos a mostrar en la tabla de equipos de la
 aplicación.
 
+También incluye las funciones para mostrar y editar los puntos de homologación
+del equipo.
+
 La clase accede a la lista de equipos de la base de datos, y los muestra en la
 tabla.
 
@@ -79,21 +82,29 @@ class TablaEquipos(object):
                        command=lambda: self.seleccionar_estado(
                            estado.HOMOLOGADO)).pack(side=tkinter.LEFT)
 
+        # Obtenemos los datos de configuración de la cabecera desde la
+        # base de datos.
         cabecera, ancho, alineacion, ajuste = self.__conexion.configuracion_tabla()
-
+        # Creamos la tabla, junto con su formato.
         self.__tabla_equipos = Tabla(tabla, cabecera, ancho, ajuste, alineacion,
                                      50, 45, FUENTE_CABECERA, FUENTE_DATOS)
 
-        self.__estado_tabla = self.seleccionar_estado(estado.INSCRITO)
-
+        # Inicialmente arrancamos la aplicación mostrando todos los equipos.
+        self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
+        # Configuración de eventos. La tabla de configuración de la base de
+        # datos nos indica sobre que columnas se deben ejecutar los eventos
+        # de edición de puntos, y sobre que columnas los de cambio de registro.
         eventos = self.__conexion.configuracion_eventos()
         for n, evento in enumerate(eventos):
             if evento is None:
                 continue
             elif evento == 0:
+                # El código 0 se refiere a cambio de registro.
                 self.__tabla_equipos.añadir_evento(
                     "<Double-1>", n, self.registrar)
             else:
+                # El resto de códigos se refieren al número de zona que debe
+                # editar dicho evento.
                 self.__tabla_equipos.añadir_evento(
                     "<Double-1>", n, self.editar_zona(evento)(self.editar_zona_aux))
 
@@ -102,27 +113,30 @@ class TablaEquipos(object):
         # es decir, estamos en modo Lectura.
         self.__pagina_edicion = None
 
-    def refrescar_tabla(self):
-        lista = self.__conexion.lista_equipos(self.__estado_tabla)
-        lista = Tabla.formatear_lista_tabla(lista)
-        self.__tabla_equipos.refrescar(lista)
-
-    def seleccionar_estado(self, es):
-        global estado_tabla
-        self.__estado_tabla = es
-        self.refrescar_tabla()
-        return self.__estado_tabla
-
     def registrar(self, fila, evento=None):
+        """
+        Cambia el estado de registro de un equipo.
+
+        """
         if self.__pagina_edicion is not None:
             tkinter.messagebox.showwarning(
                 "Edición puntos homologación",
                 "Guarde los datos del equipo actual antes de editar otro equipo.")
             return
+        # Obtenemos el nombre del equipo para mostrarselo al usuario.
+        nombre = self.__conexion.datos_equipo(fila)
+        # Antes de cambiar de estado, preguntamos al usuario.
+        if tkinter.messagebox.askokcancel(
+                "Registrar equipo",
+                "Cambiar el estado de registro del equipo %s (%s)" %
+                (nombre[1], nombre[0])):
+            self.__conexion.registrar_equipo(fila)
+            self.refrescar_tabla()
 
-        self.__conexion.registrar_equipo(fila, self.__estado_tabla)
-        self.refrescar_tabla()
-
+    # Funciones de atención a los eventos de edición de zona de homologación.
+    # Se implementa como un decorator, de tal forma que con una única función
+    # podems atender a todos los posibles zonas sin necesidad de pasar el
+    # número de zona como argumento.
     @staticmethod
     def editar_zona(zona):
         def decorator(funcion):
@@ -132,19 +146,57 @@ class TablaEquipos(object):
         return decorator
 
     def editar_zona_aux(self, fila, zona, evento=None):
-        if self.__pagina_edicion is not None:
+        """
+        Función principal de edición de zonas.
+
+        """
+        # Comprobamos si nos encontramos editando otra zona.
+#        if self.__pagina_edicion is not None:
+        if self.edicion:
             tkinter.messagebox.showwarning(
                 "Edición puntos homologación",
                 "Guarde los datos del equipo actual antes de editar otro equipo.")
             return
 
-        if self.__estado_tabla == estado.INSCRITO:
+        # Si el equipo no está registrado, no podemos homologarlo todavía.
+        if self.__conexion.estado_equipo(fila) == 0:
             return
+        # Creamos una nueva página para editar los puntos de la zona.
         self.__pagina_edicion = Pagina(
             self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
 
-    def desbloquear(self):
+    def refrescar_tabla(self):
+        """
+        Refresca los datos de la tabla.
+
+        """
+        # Obtenemos los datos para la tabla,
+        lista = self.__conexion.lista_equipos(self.__estado_tabla)
+        # los formatemaos
+        lista = Tabla.formatear_lista_tabla(lista)
+        # y los mostramos en la tabla.
+        self.__tabla_equipos.refrescar(lista)
+
+    def seleccionar_estado(self, es):
+        """
+        Permite cambiar el estado (filtro) de la tabla de equipos.
+
+        """
+        global estado_tabla
+        self.__estado_tabla = es
         self.refrescar_tabla()
+        return self.__estado_tabla
+
+    def desbloquear(self):
+        """
+        Evento que debe ser llamado una vez se cierre la página de edición.
+
+        """
+        # Cada vez que cerramos una página, refrescamos la tabla, ya que es
+        # posible que el equipo haya cambiado de estado.
+        self.refrescar_tabla()
+        # Y ponemos su estado en modo lectura, hasta que abramos una nueva
+        # página.
         self.__pagina_edicion = None
 
     def get_ancho(self):

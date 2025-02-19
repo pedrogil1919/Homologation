@@ -67,7 +67,7 @@ class Conexion():
         self.__conexion.rollback()
         self.__conexion.autocommit = True
 
-    def registrar_equipo(self, fila, estado_actual):
+    def registrar_equipo(self, fila):
         """
         Alterna el estado de registro de un equipo
 
@@ -78,8 +78,29 @@ class Conexion():
 
         """
         cursor_dorsal = self.__conexion.cursor(prepared=True)
-        cursor_estado = self.__conexion.cursor(prepared=True)
         cursor_equipo = self.__conexion.cursor(prepared=True)
+        cursor_dorsal.execute(
+            "SELECT ID_EQUIPO FROM ListaEquipos WHERE ORDEN = %s", (fila,))
+        if cursor_dorsal.rowcount != 1:
+            raise RuntimeError("Error en función de cambio de estado.")
+        dorsal = cursor_dorsal.fetchone()[0]
+        # Determinamos el estado de registro del equipo, y cambiamos su estado.
+        estado_nuevo = 1 if (self.estado_equipo(fila) == 0) else 0
+        cursor_equipo.execute(
+            "UPDATE Equipo SET registrado=%s WHERE ID_EQUIPO=%s",
+            (estado_nuevo, dorsal))
+        if cursor_equipo.affected_rows != 1:
+            raise RuntimeError("Error en función de cambio de estado.")
+        self.__conexion.commit()
+
+    def estado_equipo(self, fila):
+        """
+        Determina el estado de registro de un equipo.
+
+        """
+        cursor_dorsal = self.__conexion.cursor(prepared=True)
+        cursor_estado = self.__conexion.cursor(prepared=True)
+        # Obtenemos el dorsal del equipo.
         cursor_dorsal.execute(
             "SELECT ID_EQUIPO FROM ListaEquipos WHERE ORDEN = %s", (fila,))
         if cursor_dorsal.rowcount != 1:
@@ -91,12 +112,7 @@ class Conexion():
         if cursor_estado.rowcount != 1:
             raise RuntimeError("Error en función de cambio de estado.")
         estado_actual = cursor_estado.fetchone()[0]
-        estado_nuevo = 1 if (estado_actual == 0) else 0
-        cursor_equipo.execute(
-            "UPDATE Equipo SET registrado=%s WHERE ID_EQUIPO=%s", (estado_nuevo, dorsal))
-        if cursor_equipo.affected_rows != 1:
-            raise RuntimeError("Error en función de cambio de estado.")
-        self.__conexion.commit()
+        return estado_actual
 
     def lista_equipos(self, estado):
         # self.__conexion.rollback()
