@@ -38,6 +38,7 @@ class Conexion():
                 password=password,
                 host=host,
                 database=database,
+                autocommit=True,
                 connect_timeout=10)
         except mariadb.OperationalError as error:
             raise ValueError("No es posible la conexión con %s(%s). %s",
@@ -54,6 +55,17 @@ class Conexion():
 
         """
         return "%s (%s) - Usuario: %s" % (self.__database, self.__host, self.__user)
+
+    def abrir_transaccion(self):
+        self.__conexion.autocommit = False
+
+    def cerrar_transaccion(self):
+        self.__conexion.commit()
+        self.__conexion.autocommit = True
+
+    def cancelar_transaccion(self):
+        self.__conexion.rollback()
+        self.__conexion.autocommit = True
 
     def registrar_equipo(self, fila, estado_actual):
         """
