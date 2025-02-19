@@ -18,14 +18,15 @@ El objeto puede tener dos estados:
 @author: pedrogil
 '''
 
-import tkinter
+import tkinter.messagebox
 
 from base_datos import estado
+from pagina_edicion import Pagina
 from tabla import Tabla
 
 
-FUENTE_CABECERA = ("HELVETICA", 20, "bold")
-FUENTE_DATOS = ("HELVETICA", 15, "bold")
+FUENTE_CABECERA = ("LIBERATION SANS", 20, "")
+FUENTE_DATOS = ("LIBERATION SANS", 15, "")
 
 
 class TablaEquipos(object):
@@ -33,16 +34,20 @@ class TablaEquipos(object):
 
     '''
 
-    def __init__(self, conexion, marco):
+    def __init__(self, marco, conexion, puntos):
         '''
         Constructor
 
         Argumentos:
         - marco: marco de tkinter donde se construirá toda la interfaz gráfica
+        - conexion.
+        - puntos: marco auxiliar donde se mostrarán los puntos de homologacion.
 
         '''
         # Guardamos la conexión a la base de datos.
         self.__conexion = conexion
+        # Guardamos el marco donde se mostrarán los puntos de homologación.
+        self.__puntos = puntos
 
         # Creamos una cabecera para incluir los botones de cambio de pestaña.
         pestañas = tkinter.Frame(marco)
@@ -58,6 +63,10 @@ class TablaEquipos(object):
 
         # Sobre la cabecera añadimos botones para cambiar entre los distintos
         # estados del equipo.
+        tkinter.Button(pestañas, text="Todos",
+                       command=lambda: self.seleccionar_estado(
+                           estado.TODOS)).pack(side=tkinter.LEFT)
+
         tkinter.Button(pestañas, text="Inscritos",
                        command=lambda: self.seleccionar_estado(
                            estado.INSCRITO)).pack(side=tkinter.LEFT)
@@ -80,11 +89,18 @@ class TablaEquipos(object):
         eventos = self.__conexion.configuracion_eventos()
         for n, evento in enumerate(eventos):
             if evento is None:
+                continue
+            elif evento == 0:
                 self.__tabla_equipos.añadir_evento(
                     "<Double-1>", n, self.registrar)
             else:
                 self.__tabla_equipos.añadir_evento(
                     "<Double-1>", n, self.editar_zona(evento)(self.editar_zona_aux))
+
+        # Guardamos en esta variable la referencia a la página que estamos
+        # editando. Si es None, significa que estamos no estamos editando nada,
+        # es decir, estamos en modo Lectura.
+        self.__pagina_edicion = None
 
     def refrescar_tabla(self):
         lista = self.__conexion.lista_equipos(self.__estado_tabla)
@@ -98,10 +114,17 @@ class TablaEquipos(object):
         return self.__estado_tabla
 
     def registrar(self, fila, evento=None):
+        if self.__pagina_edicion is not None:
+            tkinter.messagebox.showwarning(
+                "Edición puntos homologación",
+                "Guarde los datos del equipo actual antes de editar otro equipo.")
+            return
+
         self.__conexion.registrar_equipo(fila, self.__estado_tabla)
         self.refrescar_tabla()
 
-    def editar_zona(self, zona):
+    @staticmethod
+    def editar_zona(zona):
         def decorator(funcion):
             def wrapper(fila, evento=None):
                 return funcion(fila, zona, evento)
@@ -109,8 +132,20 @@ class TablaEquipos(object):
         return decorator
 
     def editar_zona_aux(self, fila, zona, evento=None):
-        pass
-        # Pagina(puntos, bd, fila, zona)
+        if self.__pagina_edicion is not None:
+            tkinter.messagebox.showwarning(
+                "Edición puntos homologación",
+                "Guarde los datos del equipo actual antes de editar otro equipo.")
+            return
+
+        if self.__estado_tabla == estado.INSCRITO:
+            return
+        self.__pagina_edicion = Pagina(
+            self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
+
+    def desbloquear(self):
+        self.refrescar_tabla()
+        self.__pagina_edicion = None
 
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla
