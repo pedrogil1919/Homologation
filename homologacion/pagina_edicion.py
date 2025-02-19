@@ -16,7 +16,10 @@ COLOR_NO = "coral1"
 
 class Pagina(object):
 
-    def __init__(self, marco, conexion, fila, zona):
+    def __init__(self, desbloquear, marco, conexion, fila, zona):
+
+        self.__desbloquear = desbloquear
+        self.__marco = marco
         # Construimos una etiqueta para incluir el nombre del equipo.
         self.__conexion = conexion
         self.__zona = zona
@@ -30,9 +33,9 @@ class Pagina(object):
         botones = tkinter.Frame(marco, bg="gray90")
         botones.grid(row=2, column=0, sticky="nsew")
 
-        tkinter.Button(botones, text="Cancelar").pack(
+        tkinter.Button(botones, text="Cancelar", command=self.cancelar).pack(
             side=tkinter.RIGHT, padx=10, pady=10)
-        tkinter.Button(botones, text="Guardar").pack(
+        tkinter.Button(botones, text="Guardar", command=self.guardar).pack(
             side=tkinter.RIGHT, padx=10, pady=10)
 
         marco.columnconfigure(index=0, weight=1)
@@ -51,8 +54,22 @@ class Pagina(object):
             etiqueta.bind("<Button-1>", partial(
                 self.actualizar_punto, punto, etiqueta))
 
+        self.__conexion.abrir_transaccion()
+
     def actualizar_punto(self, punto, etiqueta, evento=None):
         valor = self.__conexion.actualizar_putno_homologacion(
             self.__equipo, punto, self.__zona)
         color = COLOR_SI if valor == 0 else COLOR_NO
         etiqueta.config(bg=color)
+
+    def guardar(self):
+        self.__conexion.cerrar_transaccion()
+        for control in self.__marco.winfo_children():
+            control.destroy()
+        self.__desbloquear()
+
+    def cancelar(self):
+        self.__conexion.cancelar_transaccion()
+        for control in self.__marco.winfo_children():
+            control.destroy()
+        self.__desbloquear()
