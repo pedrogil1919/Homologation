@@ -64,23 +64,33 @@ class TablaEquipos(object):
         marco.rowconfigure(index=1, weight=1)
         marco.columnconfigure(index=0, weight=1)
 
+        self.variable = tkinter.IntVar()
+        self.variable.set(1)
         # Sobre la cabecera añadimos botones para cambiar entre los distintos
         # estados del equipo.
-        tkinter.Button(pestañas, text="Todos",
-                       command=lambda: self.seleccionar_estado(
-                           estado.TODOS)).pack(side=tkinter.LEFT)
+        tkinter.Radiobutton(pestañas, text="Todos",
+                            variable=self.variable, value=1,
+                            indicatoron=0, width=10, height=1, padx=10, pady=10,
+                            command=lambda: self.seleccionar_estado(
+                                estado.TODOS)).pack(side=tkinter.LEFT)
 
-        tkinter.Button(pestañas, text="Inscritos",
-                       command=lambda: self.seleccionar_estado(
-                           estado.INSCRITO)).pack(side=tkinter.LEFT)
+        tkinter.Radiobutton(pestañas, text="Inscritos",
+                            variable=self.variable, value=2,
+                            indicatoron=0, width=10, height=1, padx=10, pady=10,
+                            command=lambda: self.seleccionar_estado(
+                                estado.INSCRITO)).pack(side=tkinter.LEFT)
 
-        tkinter.Button(pestañas, text="Registrados",
-                       command=lambda: self.seleccionar_estado(
-                           estado.REGISTRADO)).pack(side=tkinter.LEFT)
+        tkinter.Radiobutton(pestañas, text="Registrados",
+                            variable=self.variable, value=3,
+                            indicatoron=0, width=10, height=1, padx=10, pady=10,
+                            command=lambda: self.seleccionar_estado(
+                                estado.REGISTRADO)).pack(side=tkinter.LEFT)
 
-        tkinter.Button(pestañas, text="Homologados",
-                       command=lambda: self.seleccionar_estado(
-                           estado.HOMOLOGADO)).pack(side=tkinter.LEFT)
+        tkinter.Radiobutton(pestañas, text="Homologados",
+                            variable=self.variable, value=4,
+                            indicatoron=0, width=10, height=1, padx=10, pady=10,
+                            command=lambda: self.seleccionar_estado(
+                                estado.HOMOLOGADO)).pack(side=tkinter.LEFT)
 
         # Obtenemos los datos de configuración de la cabecera desde la
         # base de datos.
