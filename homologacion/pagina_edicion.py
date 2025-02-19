@@ -40,7 +40,8 @@ class Pagina(object):
         # Obtenemos el nombre y el dorsal del equipo.
         self.__equipo, nombre = conexion.datos_equipo(fila)
         # Construimos una cabecera para incluir el nombre del equipo.
-        tkinter.Label(marco, text=nombre, height=1).grid(
+        cabecera = "%s (Zona %s)" % (nombre, zona)
+        tkinter.Label(marco, text=cabecera, height=1).grid(
             row=0, column=0, sticky="nsew")
 
         # Construimos el marco donde mostrar todos los puntos a homologar.
