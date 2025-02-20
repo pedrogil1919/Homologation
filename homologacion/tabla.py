@@ -108,7 +108,7 @@ class Tabla(object):
         marco_cabecera = tkinter.Frame(marco, bg=BORDE)
         marco_cabecera.grid(row=0, column=0, sticky="nsew")
         # Construimos otro marco para las filas de datos:
-        marco_canvas = tkinter.Frame(marco, bg=BORDE)
+        marco_canvas = tkinter.Frame(marco, bg=FONDO_CANVAS)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
 
         # Adaptamos el ancho del grid al tamaño del contenedor.
