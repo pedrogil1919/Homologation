@@ -97,7 +97,7 @@ class Pagina(object):
         """
         # Alternamos el valor del punto de homologación.
         try:
-            valor = self.__conexion.actualizar_putno_homologacion(
+            valor = self.__conexion.actualizar_punto_homologacion(
                 self.__equipo, punto, self.__zona)
         except mariadb.OperationalError as e:
             tkinter.messagebox.showerror("Error en los datos del equipo", e)
