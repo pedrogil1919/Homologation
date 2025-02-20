@@ -46,6 +46,11 @@ class Conexion():
             raise ValueError("No es posible la conexión con %s(%s). %s",
                              (database, host, error))
 
+        cursor_bloqueo = self.__conexion.cursor()
+        cursor_bloqueo.execute(
+            "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
+
+        cursor_bloqueo.execute("SET SESSION innodb_lock_wait_timeout = 5")
         # Guardamos los datos en el objeto.
         self.__user = user
         self.__host = host
@@ -58,16 +63,24 @@ class Conexion():
         """
         return "%s (%s) - Usuario: %s" % (self.__database, self.__host, self.__user)
 
-    def abrir_transaccion(self):
-        self.__conexion.autocommit = False
+################################################################################
+################################################################################
+################################################################################
+    def lista_equipos(self, estado):
+        """
+        Obtiene la lista de equipos filtrados por el valor de estado
 
-    def cerrar_transaccion(self):
-        self.__conexion.commit()
-        self.__conexion.autocommit = True
+        Ver definición del tipo enumerado "estado"
 
-    def cancelar_transaccion(self):
-        self.__conexion.rollback()
-        self.__conexion.autocommit = True
+        """
+        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
+        filtro_registrado = ESTADO[estado][0]
+        filtro_homologado = ESTADO[estado][1]
+        consulta = "SELECT * FROM ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
+            format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
+        cursor.execute(consulta)
+        equipos = cursor.fetchall()
+        return equipos
 
     def registrar_equipo(self, fila):
         """
@@ -116,52 +129,7 @@ class Conexion():
         estado_actual = cursor_estado.fetchone()[0]
         return estado_actual
 
-    def lista_equipos(self, estado):
-        """
-        Obtiene la lista de equipos filtrados por el valor de estado
-
-        Ver definición del tipo enumerado "estado"
-
-        """
-        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
-        filtro_registrado = ESTADO[estado][0]
-        filtro_homologado = ESTADO[estado][1]
-        consulta = "SELECT * FROM ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
-            format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
-        cursor.execute(consulta)
-        equipos = cursor.fetchall()
-        return equipos
-
-    def configuracion_tabla(self):
-        """
-        Obtener los datos de configuración de la tabla de visualización
-
-        Ver tabla "ConfigVistaListaEquipos"
-        """
-        cursor = self.__conexion.cursor(dictionary=True, prepared=True)
-        cursor.execute("SELECT * FROM ConfigVistaListaEquipos")
-        lista = cursor.fetchall()
-        cabecera = [fila["nombre"] for fila in lista]
-        ancho = [fila["ancho"] for fila in lista]
-        alineacion = [fila["alineacion"] for fila in lista]
-        ajuste = [fila["ajuste"] for fila in lista]
-
-        return cabecera, ancho, alineacion, ajuste
-
-    def configuracion_eventos(self):
-        """
-        Obtener los datos de configuración de eventos para la tabla
-
-        Ver tabla "ConfigVistaListaEquipos"
-        """
-        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
-        cursor.execute("SELECT zona FROM ConfigVistaListaEquipos")
-        lista = cursor.fetchall()
-        eventos = [fila[0] for fila in lista]
-
-        return eventos
-
-    def datos_equipo(self, equipo):
+    def datos_equipo(self, fila):
         """
         Obtiene los datos del equipo a partir de la fila en la tabla
 
@@ -169,16 +137,20 @@ class Conexion():
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor.execute(
             "SELECT ID_EQUIPO, equipo FROM ListaEquipos WHERE ORDEN = %s",
-            (equipo,))
+            (fila,))
 
         nombre = cursor.fetchone()
         return nombre[0], nombre[1]
 
+################################################################################
+################################################################################
+################################################################################
     def lista_puntos_homologacion(self, equipo, zona):
         """
         Obtiene la lista de puntos de homologación para la zona indicada.
 
         """
+        self.__abrir_transaccion(equipo)
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
         cursor.execute(
             "SELECT * FROM ListaPuntosHomologacion WHERE "
@@ -215,9 +187,39 @@ class Conexion():
         return valor
 
 
-###############################################################################
-###############################################################################
-###############################################################################
+################################################################################
+################################################################################
+################################################################################
+    def bloquear_equipo(self, equipo):
+        """
+        Bloquea todos los registros relacionados con este equipo en la bd.
+
+        """
+        # Bloqueamos a nivel de base de datos
+        cursor_equipo = self.__conexion.cursor(prepared=True)
+        cursor_puntos = self.__conexion.cursor(prepared=True)
+
+        cursor_equipo.execute(
+            "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE", (equipo,))
+        cursor_puntos.execute(
+            "SELECT * FROM HomologacionEquipo WHERE FK_EQUIPO = %s FOR UPDATE", (equipo,))
+
+    def __abrir_transaccion(self, equipo):
+        self.__conexion.autocommit = False
+        self.bloquear_equipo(equipo)
+        self.__conexion.begin()
+
+    def guardar(self):
+        self.__conexion.commit()
+        self.__conexion.autocommit = True
+
+    def cancelar(self):
+        self.__conexion.rollback()
+        self.__conexion.autocommit = True
+
+################################################################################
+################################################################################
+################################################################################
 
     def get_cabecera(self, columna):
         cursor = self.__conexion.cursor(dictionary=False, prepared=False)
