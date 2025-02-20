@@ -94,9 +94,13 @@ class TablaEquipos(object):
 
         # Obtenemos los datos de configuración de la cabecera desde la
         # base de datos.
-        cabecera, ancho, alineacion, ajuste = self.__conexion.configuracion_tabla()
+#        cabecera, ancho, alineacion, ajuste = self.__conexion.configuracion_tabla()
+        nombre = self.__conexion.cabecera_nombre
+        ancho = self.__conexion.cabecera_ancho
+        alineacion = self.__conexion.cabecera_alineacion
+        ajuste = self.__conexion.cabecera_ajuste
         # Creamos la tabla, junto con su formato.
-        self.__tabla_equipos = Tabla(tabla, cabecera, ancho, ajuste, alineacion,
+        self.__tabla_equipos = Tabla(tabla, nombre, ancho, ajuste, alineacion,
                                      50, 45, FUENTE_CABECERA, FUENTE_DATOS)
 
         # Inicialmente arrancamos la aplicación mostrando todos los equipos.
@@ -104,7 +108,8 @@ class TablaEquipos(object):
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre que columnas se deben ejecutar los eventos
         # de edición de puntos, y sobre que columnas los de cambio de registro.
-        eventos = self.__conexion.configuracion_eventos()
+#        eventos = self.__conexion.configuracion_eventos()
+        eventos = self.__conexion.cabecera_eventos
         for n, evento in enumerate(eventos):
             if evento is None:
                 continue
