@@ -24,7 +24,10 @@ La tabla quedaría:
 |dato41 | dato42 | dato43|
 |dato61 | dato62 | dato63|
 |------------------------|
-    
+
+Entre los parámetros de la tabla figura el ancho, en píxeles, de cada columna.
+Si el ancho es 0, significa que no se debe añadir esa columna.
+
 @author: pedrogil
 '''
 
@@ -152,6 +155,10 @@ class Tabla(object):
             # fijásemos el tamaño de las etiquetas, estas vienen en función del
             # tamaño de la fuente, y por lo tanto puede variar entre la
             # cabecera y el resto de filas.
+            if ancho[col] == 0:
+                # Si el ancho es 0, nos indican que no debemos añadir esta
+                # columna.
+                continue
             marco_aux = tkinter.Frame(
                 marco_cabecera, width=self.__ancho[col], height=alto_cabecera)
             marco_aux.grid(row=0, column=col, sticky="nsew", padx=1, pady=1)
@@ -325,11 +332,15 @@ class Tabla(object):
             raise ValueError(
                 "Error añadir fila: número de columnas incorrecto")
 
-        # Guardamos en sendas listas los marcos y etiquetas que creamos para
-        # representar la fila.
-        fila_celdas = []
-        fila_marcos = []
+        # Guardamos en sendos diccionarios los marcos y etiquetas que creamos
+        # para representar la fila.
+        fila_celdas = {}
+        fila_marcos = {}
         for col, dato in enumerate(valores):
+            if self.__ancho[col] == 0:
+                # Si el ancho es 0, nos indican que no debemos añadir esta
+                # columna
+                continue
             # Creamos el marco que contendrá la etiqueta.
             marco_celda = tkinter.Frame(self.marco_tabla,
                                         width=self.__ancho[col],
@@ -351,8 +362,8 @@ class Tabla(object):
                 funcion = ev[1]
                 etiqueta_celda.bind(evento, partial(funcion, fila))
 
-            fila_celdas += [etiqueta_celda]
-            fila_marcos += [marco_celda]
+            fila_celdas[col] = etiqueta_celda
+            fila_marcos[col] = marco_celda
         # Actualizamos la lista de controles añadidos.
         self.__controles[fila] = {"L": fila_celdas, "F": fila_marcos}
 
@@ -367,7 +378,7 @@ class Tabla(object):
             return
         # Eliminamos los controles de la interfaz, ya que sólo elimnandolos de
         # la lista no es suficiente para que desaparezcan.
-        for control in controles['F']:
+        for control in controles['F'].values():
             control.destroy()
         del self.__controles[fila]
 
@@ -385,8 +396,9 @@ class Tabla(object):
             raise ValueError(
                 "Error al actualizar fila: número de columnas incorrecto")
 
-        for control, dato in zip(controles['L'], valores):
-            control.config(text=dato)
+        etiquetas = controles['L']
+        for columna in etiquetas:
+            etiquetas[columna].config(text=valores[columna])
 
     def añadir_evento(self, evento, columna, funcion):
         """
@@ -395,6 +407,10 @@ class Tabla(object):
         requerido por la función bind de tkinter (ej, "<Button-1>", "<Double-1>"
 
         """
+        if self.__ancho[columna] == 0:
+            # Si el ancho es 0, significa que no se ha añadido la columna,
+            # por lo que tampoco añadiremos el evento.
+            return
         try:
             # Para cada evento, guardamos el nombre del evento, y la función
             # asociada a dicho evento.
