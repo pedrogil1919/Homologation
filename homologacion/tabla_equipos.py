@@ -145,7 +145,11 @@ class TablaEquipos(object):
                 "Registrar equipo",
                 "Cambiar el estado de registro del equipo %s (%s)" %
                 (nombre[1], nombre[0])):
-            self.__conexion.registrar_equipo(fila)
+            try:
+                self.__conexion.registrar_equipo(fila)
+            except BlockingIOError as e:
+                tkinter.messagebox.showerror(
+                    "Error edición equipo", e)
             self.refrescar_tabla()
 
     # Funciones de atención a los eventos de edición de zona de homologación.
@@ -177,8 +181,12 @@ class TablaEquipos(object):
         if self.__conexion.estado_equipo(fila) == 0:
             return
         # Creamos una nueva página para editar los puntos de la zona.
-        self.__pagina_edicion = Pagina(
-            self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
+        try:
+            self.__pagina_edicion = Pagina(
+                self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
+        except BlockingIOError as e:
+            tkinter.messagebox.showerror(
+                "Error edición equipo", e)
 
     def refrescar_tabla(self):
         """

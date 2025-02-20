@@ -92,8 +92,8 @@ class Conexion():
           necesario determinar el dorsal a partir de la fila.
 
         """
+        # Obtenemos el dorsal del equipo a partir de la fila en la tabla.
         cursor_dorsal = self.__conexion.cursor(prepared=True)
-        cursor_equipo = self.__conexion.cursor(prepared=True)
         cursor_dorsal.execute(
             "SELECT ID_EQUIPO FROM ListaEquipos WHERE ORDEN = %s", (fila,))
         if cursor_dorsal.rowcount != 1:
@@ -101,6 +101,22 @@ class Conexion():
         dorsal = cursor_dorsal.fetchone()[0]
         # Determinamos el estado de registro del equipo, y cambiamos su estado.
         estado_nuevo = 1 if (self.estado_equipo(fila) == 0) else 0
+
+        # Comprobamos que el equipo no esté bloqueado por otro usuario, y por
+        # tano no podemos cambiar su estado.
+        cursor_bloqueo = self.__conexion.cursor(prepared=True)
+        try:
+            cursor_bloqueo.execute(
+                "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE NOWAIT",
+                (dorsal,))
+        except mariadb.OperationalError as e:
+            # Detectamos si el equipo se encuentra bloqueado por otro usuario.
+            if e.errno == 1205:
+                raise BlockingIOError(
+                    "El equipo está bloqueado por otro usuario. "
+                    "Espere a que termine para poder continar.")
+
+        cursor_equipo = self.__conexion.cursor(prepared=True)
         cursor_equipo.execute(
             "UPDATE Equipo SET registrado=%s WHERE ID_EQUIPO=%s",
             (estado_nuevo, dorsal))
@@ -190,24 +206,33 @@ class Conexion():
 ################################################################################
 ################################################################################
 ################################################################################
-    def bloquear_equipo(self, equipo):
+    def __bloquear_equipo(self, equipo):
         """
         Bloquea todos los registros relacionados con este equipo en la bd.
 
         """
-        # Bloqueamos a nivel de base de datos
+        # Bloqueamos a nivel de base de datos para que no se puedan modificar
+        # por otro usuario hasta que no cierre el primer usuario.
         cursor_equipo = self.__conexion.cursor(prepared=True)
         cursor_puntos = self.__conexion.cursor(prepared=True)
-
-        cursor_equipo.execute(
-            "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE", (equipo,))
-        cursor_puntos.execute(
-            "SELECT * FROM HomologacionEquipo WHERE FK_EQUIPO = %s FOR UPDATE", (equipo,))
+        try:
+            cursor_equipo.execute(
+                "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE NOWAIT",
+                (equipo,))
+            cursor_puntos.execute(
+                "SELECT * FROM HomologacionEquipo WHERE FK_EQUIPO = %s "
+                "FOR UPDATE NOWAIT", (equipo,))
+        except mariadb.OperationalError as e:
+            # Detectamos si el equipo se encuentra bloqueado por otro usuario.
+            if e.errno == 1205:
+                raise BlockingIOError(
+                    "El equipo está bloqueado por otro usuario. "
+                    "Espere a que termine para poder continar.")
 
     def __abrir_transaccion(self, equipo):
         self.__conexion.autocommit = False
-        self.bloquear_equipo(equipo)
         self.__conexion.begin()
+        self.__bloquear_equipo(equipo)
 
     def guardar(self):
         self.__conexion.commit()

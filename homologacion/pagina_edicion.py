@@ -42,6 +42,14 @@ class Pagina(object):
 
         # Obtenemos el nombre y el dorsal del equipo.
         self.__equipo, nombre = conexion.datos_equipo(fila)
+
+        # Obtenemos la lita de puntos a homologar.
+        # NOTA: realizamos la consulta en este punto, antes de construir la
+        # interfaz, ya que es posible que el equipo esté bloquedo por otro
+        # usuario, y no podamos continuar.
+        lista_puntos = self.__conexion.lista_puntos_homologacion(
+            self.__equipo, self.__zona)
+
         # Construimos una cabecera para incluir el nombre del equipo.
         cabecera = "%s (Zona %s)" % (nombre, zona)
         tkinter.Label(marco, text=cabecera, height=1).grid(
@@ -67,9 +75,6 @@ class Pagina(object):
         marco.rowconfigure(index=1, weight=1)
         marco.rowconfigure(index=2, weight=0)
 
-        # Obtenemos la lita de puntos a homologar.
-        lista_puntos = conexion.lista_puntos_homologacion(
-            self.__equipo, self.__zona)
         # Los añadimos al marco cada uno debajo del anterior.
         for elemento in lista_puntos:
             # Obtenemos el color de fondo en función de si el punto está
@@ -85,11 +90,6 @@ class Pagina(object):
             etiqueta.bind("<Button-1>", partial(
                 self.actualizar_punto, punto, etiqueta))
 
-        # En el caso de la edición de páginas, lo hacemos mediante transacción,
-        # por lo que sólo es posible actualizar la base de datos pulsando el
-        # botón guardar.
-        self.__conexion.abrir_transaccion()
-
     def actualizar_punto(self, punto, etiqueta, evento=None):
         """
         Alterna el valor de un punto de homologación.
@@ -100,7 +100,17 @@ class Pagina(object):
             valor = self.__conexion.actualizar_punto_homologacion(
                 self.__equipo, punto, self.__zona)
         except mariadb.OperationalError as e:
-            tkinter.messagebox.showerror("Error en los datos del equipo", e)
+            if e.errno == 1205:
+                # Time out:
+                tkinter.messagebox.showerror(
+                    "Tiempo de espera superado",
+                    "Datos del equipo bloqueado por otro usuario. "
+                    "Espere a que termine para poder edtirlo")
+            elif e.errno == 1644:
+                #
+                tkinter.messagebox.showerror(
+                    "Error en los datos del equipo", e)
+            return
         # Y al mismo tiempo determinamos el color con el que representarlo en
         # la página.
         color = COLOR_SI if valor == 0 else COLOR_NO
@@ -111,7 +121,7 @@ class Pagina(object):
         Guardar todos los datos realizados hasta el momento y finalizar.
 
         """
-        self.__conexion.cerrar_transaccion()
+        self.__conexion.guardar()
         for control in self.__marco.winfo_children():
             control.destroy()
         # Lanzamos el evento de desbloqueo del módulo llamante.
@@ -122,7 +132,7 @@ class Pagina(object):
         Cancelar todos los datos realizados hasta el momento y finalizar.
 
         """
-        self.__conexion.cancelar_transaccion()
+        self.__conexion.cancelar()
         for control in self.__marco.winfo_children():
             control.destroy()
         # Lanzamos el evento de desbloqueo del módulo llamante.
