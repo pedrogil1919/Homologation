@@ -36,32 +36,32 @@ class Pagina(object):
         self.__desbloquear = desbloquear
         # Guardamos la referencia a la base de datos.
         self.__conexion = conexion
-        # Y el marco y la zona que estamos editando.
         self.__marco = marco
+        # Y el número de zona que estamos editando.
         self.__zona = zona
 
         # Obtenemos el nombre y el dorsal del equipo.
         self.__equipo, nombre = conexion.datos_equipo(fila)
 
-        # Obtenemos la lita de puntos a homologar.
+        # Obtenemos la lista de puntos a homologar.
         # NOTA: realizamos la consulta en este punto, antes de construir la
         # interfaz, ya que es posible que el equipo esté bloquedo por otro
         # usuario, y no podamos continuar.
         lista_puntos = self.__conexion.lista_puntos_homologacion(
             self.__equipo, self.__zona)
 
+        ########################################################################
+        ########################################################################
         # Construimos una cabecera para incluir el nombre del equipo.
-        cabecera = "%s (Zona %s)" % (nombre, zona)
-        tkinter.Label(marco, text=cabecera, height=1).grid(
-            row=0, column=0, sticky="nsew")
-
-        # Construimos el marco donde mostrar todos los puntos a homologar.
-        pagina = tkinter.Frame(marco, bg="gray90")
-        pagina.grid(row=1, column=0, sticky="nsew")
-
-        # Y añadimos dos botones en la parte inferior de la página.
-        botones = tkinter.Frame(marco, bg="gray90")
-        botones.grid(row=2, column=0, sticky="nsew")
+        cabecera = "(%i) %s - Zona %s" % (self.__equipo, nombre, zona)
+        tkinter.Label(self.__marco, text=cabecera, height=1).grid(
+            row=0, column=0, columnspan=2, sticky="nsew")
+        # Otro marco donde mostrar los puntos de homologación.
+        marco_canvas = tkinter.Frame(self.__marco, bg="gray")
+        marco_canvas.grid(row=1, column=0, sticky="nsew")
+        # Y añadimos un marco con dos botones en la parte inferior de la página.
+        botones = tkinter.Frame(self.__marco, bg="gray90")
+        botones.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
         tkinter.Button(botones, text="Cancelar", command=self.cancelar).pack(
             side=tkinter.RIGHT, padx=10, pady=10)
@@ -70,27 +70,80 @@ class Pagina(object):
 
         # Ajustamos para que todo el espacio sobrante lo ocupe el marco que
         # mostrará los puntos de homologación.
-        marco.columnconfigure(index=0, weight=1)
-        marco.rowconfigure(index=0, weight=0)
-        marco.rowconfigure(index=1, weight=1)
-        marco.rowconfigure(index=2, weight=0)
+        self.__marco.columnconfigure(index=0, weight=1)
+        self.__marco.rowconfigure(index=0, weight=0)
+        self.__marco.rowconfigure(index=1, weight=1)
+        self.__marco.rowconfigure(index=2, weight=0)
+        ########################################################################
+        ########################################################################
+        # Creamos un canvas para que se pueda añadir una barra de desplazamiento
+        # vertical cuando el número de puntos sea grande.
+        self.__canvas = tkinter.Canvas(marco_canvas, bg="blue")
+        self.__canvas.grid(row=0, column=0, sticky="nsew")
+        self.__barra = tkinter.Scrollbar(
+            marco_canvas, orient=tkinter.VERTICAL, command=self.__canvas.yview)
+        self.__barra.grid(row=0, column=1, sticky="ns")
+        self.__canvas.config(yscrollcommand=self.__barra.set)
+
+        # Adaptamos el ancho de todo esto al del marco donde lo hemos colocado.
+        marco_canvas.rowconfigure(0, weight=1)
+        # Y para las columnas, la que contiene la barra de desplazamiento debe
+        # tener una anchura fija,
+        marco_canvas.columnconfigure(1, minsize=self.__barra.winfo_reqwidth())
+        # Y el resto se lo queda el marco que contiene los datos.
+        marco_canvas.columnconfigure(0, weight=1)
+        ########################################################################
+        ########################################################################
+
+        # Construimos el marco donde mostrar todos los puntos a homologar.
+        self.__pagina = tkinter.Frame(self.__canvas, bg="yellow")
+        self.__canvas.create_window(
+            (1, 1), window=self.__pagina, anchor="nw", tags="frame")
 
         # Los añadimos al marco cada uno debajo del anterior.
-        for elemento in lista_puntos:
+        for fila, elemento in enumerate(lista_puntos):
             # Obtenemos el color de fondo en función de si el punto está
             # suprado o no.
             color = COLOR_SI if elemento["valor"] == 0 else COLOR_NO
             etiqueta = tkinter.Label(
-                pagina, text=elemento["descripcion"], bg=color,
-                anchor="w", padx=15, pady=5)
-            etiqueta.pack(fill=tkinter.X, expand=False)
+                self.__pagina, text=elemento["descripcion"], bg=color,
+                anchor="w", justify=tkinter.LEFT, padx=15, pady=5)
+            etiqueta.grid(row=fila, column=0, sticky="nsew", pady=1)
+
             # Asociamos el evento del ratón con la función que permite cambiar
             # el estado del punto.
             punto = elemento["ID_HOMOLOGACION_PUNTO"]
             etiqueta.bind("<Button-1>", partial(
-                self.actualizar_punto, punto, etiqueta))
+                self.__actualizar_punto, punto, etiqueta))
 
-    def actualizar_punto(self, punto, etiqueta, evento=None):
+        self.__pagina.columnconfigure(0, weight=1)
+        self.__canvas.bind("<Configure>", self.__actualizar_tamaño)
+
+    def guardar(self):
+        """
+        Guardar todos los datos realizados hasta el momento y finalizar.
+
+        """
+        self.__conexion.guardar()
+        for control in self.__marco.winfo_children():
+            control.destroy()
+        # Lanzamos el evento de desbloqueo del módulo llamante.
+        self.__desbloquear()
+
+    def cancelar(self):
+        """
+        Cancelar todos los datos realizados hasta el momento y finalizar.
+
+        """
+        self.__conexion.cancelar()
+        for control in self.__marco.winfo_children():
+            control.destroy()
+        # Lanzamos el evento de desbloqueo del módulo llamante.
+        self.__desbloquear()
+
+################################################################################
+################################################################################
+    def __actualizar_punto(self, punto, etiqueta, evento=None):
         """
         Alterna el valor de un punto de homologación.
 
@@ -116,24 +169,30 @@ class Pagina(object):
         color = COLOR_SI if valor == 0 else COLOR_NO
         etiqueta.config(bg=color)
 
-    def guardar(self):
-        """
-        Guardar todos los datos realizados hasta el momento y finalizar.
+    def __actualizar_tamaño(self, evento=None):
+        # Ajustamos el ancho del frame que contiene las etiquetas al mismo
+        # ancho que el canvas que lo contiene.
+        ancho = self.__canvas.winfo_width()
+        self.__canvas.itemconfig('frame', width=ancho)
+        # Ajustamos el parámetro wrraplength para que las etiquetas sean
+        # multilinea para aquellos puntos que sean muy largos.
+        for control in self.__pagina.winfo_children():
+            control.config(wraplength=ancho)
 
-        """
-        self.__conexion.guardar()
-        for control in self.__marco.winfo_children():
-            control.destroy()
-        # Lanzamos el evento de desbloqueo del módulo llamante.
-        self.__desbloquear()
+        # Actualizamos la página, para que se recalcule el espacio requerido
+        # una vez se sepa el número de líneas que ocupa cada etiqueta.
+        self.__pagina.update_idletasks()
+        # Fijamos el area de scroll del canvas.
+        r = self.__canvas.bbox("frame")
+        self.__canvas.configure(scrollregion=(2, 2, r[2], r[3]))
 
-    def cancelar(self):
-        """
-        Cancelar todos los datos realizados hasta el momento y finalizar.
+        # Y la altura de la página, ya que no se ajusta solo.
+        self.__canvas.itemconfig(
+            'frame', height=self.__pagina.winfo_reqheight())
 
-        """
-        self.__conexion.cancelar()
-        for control in self.__marco.winfo_children():
-            control.destroy()
-        # Lanzamos el evento de desbloqueo del módulo llamante.
-        self.__desbloquear()
+        # Comprobamos si necesitamos scroll o no.
+        if self.__pagina.winfo_reqheight() <= self.__canvas.winfo_height():
+            self.__canvas.yview("moveto", 0.0)
+            self.__barra.grid_forget()
+        else:
+            self.__barra.grid(row=0, column=1, sticky="ns")
