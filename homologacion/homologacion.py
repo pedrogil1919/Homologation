@@ -7,8 +7,8 @@ Created on 3 feb 2025
 import sys
 import tkinter
 
-import base_datos
-from tabla_equipos import TablaEquipos
+from modelo import base_datos
+from modelo.tabla_equipos import TablaEquipos
 
 # Función para refrescar los datos de la tabla de forma periódica.
 

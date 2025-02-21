@@ -24,9 +24,9 @@ El objeto puede tener dos estados:
 from magic.compat import NONE
 import tkinter.messagebox
 
-from base_datos import estado
-from pagina_edicion import Pagina
-from tabla import Tabla
+from modelo.base_datos import estado
+from modelo.pagina_edicion import Pagina
+from modelo.tabla import Tabla
 
 
 FUENTE_CABECERA = ("LIBERATION SANS", 20, "")
