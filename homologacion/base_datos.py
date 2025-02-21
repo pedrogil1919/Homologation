@@ -61,7 +61,7 @@ class Conexion():
         Devuelve los datos informativos de la conexión.
 
         """
-        return "%s (%s) - Usuario: %s" % (self.__database, self.__host, self.__user)
+        return "%s (%s)" % (self.__database, self.__host)
 
 ################################################################################
 ################################################################################
@@ -158,9 +158,25 @@ class Conexion():
         nombre = cursor.fetchone()
         return nombre[0], nombre[1]
 
+    def resumen_equipos(self):
+        """
+        Estadísticas del proceso de homologación.
+
+        """
+        cursor = self.__conexion.cursor(dictionary=True, prepared=True)
+        cursor.execute("SELECT * FROM ResumenHomologacionEquipos")
+        if cursor.rowcount != 1:
+            raise RuntimeError("Error en la vista de resumen")
+        lista = cursor.fetchone()
+        resumen = "Total: %i - Sin reg: %i - Reg: %i - Homol: %i" % (
+            lista["total"], lista["inscrito"],
+            lista["registrado"], lista["homologado"])
+        return resumen
+
 ################################################################################
 ################################################################################
 ################################################################################
+
     def lista_puntos_homologacion(self, equipo, zona):
         """
         Obtiene la lista de puntos de homologación para la zona indicada.

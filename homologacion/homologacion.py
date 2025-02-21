@@ -16,6 +16,7 @@ from tabla_equipos import TablaEquipos
 def temporizador_refrescar():
     ventana_principal.after(500, temporizador_refrescar)
     tabla_equipos.refrescar_tabla()
+    estadisticas.config(text=bd.resumen_equipos())
 
 
 # Abrir conexión.
@@ -37,12 +38,21 @@ tabla = tkinter.Frame(ventana_principal, bg="yellow")
 tabla.grid(row=1, column=0, sticky="nsew")
 
 # Creamos otro marco donde aparecerán los puntos a validar.
-puntos = tkinter.Frame(ventana_principal, bg="blue")
+puntos = tkinter.Frame(ventana_principal)
 puntos.grid(row=1, column=1, sticky="nsew")
+
+# Creamos un marco para mostrar la barra de estado.
+barra_estado = tkinter.Frame(ventana_principal)
+barra_estado.grid(row=2, column=0, columnspan=2, sticky="ews")
+tkinter.Label(barra_estado, text=bd).pack(
+    side=tkinter.LEFT, padx=10)
+estadisticas = tkinter.Label(barra_estado, text=bd.resumen_equipos())
+estadisticas.pack(side=tkinter.RIGHT, padx=10)
 
 # Configuración del ajuste de tamaños.
 ventana_principal.columnconfigure(0, weight=0)
 ventana_principal.columnconfigure(1, weight=1)
+ventana_principal.columnconfigure(2, weight=0)
 ventana_principal.rowconfigure(1, weight=1)
 
 # Crear objeto donde se colocará la tabla de equipos.
