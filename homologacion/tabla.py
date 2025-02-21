@@ -120,32 +120,32 @@ class Tabla(object):
 
         # Creamos un Canvas para que se pueda añadir una barra de desplazamiento
         # vertical cuando el número de filas sea grande.
-        canvas = tkinter.Canvas(marco_canvas, bg=FONDO_CANVAS)
+        self.__canvas = tkinter.Canvas(marco_canvas, bg=FONDO_CANVAS)
         # y lo ponemos a la izquierda del marco anterior.
-        canvas.grid(row=0, column=0, sticky="nsew")
+        self.__canvas.grid(row=0, column=0, sticky="nsew")
         # Añadimos la barra de deslizamiento.
-        barra = tkinter.Scrollbar(
-            marco_canvas, orient=tkinter.VERTICAL, command=canvas.yview)
+        self.__barra = tkinter.Scrollbar(
+            marco_canvas, orient=tkinter.VERTICAL, command=self.__canvas.yview)
         # Y ponemos la barra de desplazamiento a la izquierda.
-        barra.grid(row=0, column=1, sticky="ns")
+        self.__barra.grid(row=0, column=1, sticky="ns")
         #  Esta instrucción permite que el elemento central del scroll (thumb)
         # se desplace de acuerdo a la parte visible de la tabla.
-        canvas.config(yscrollcommand=barra.set)
+        self.__canvas.config(yscrollcommand=self.__barra.set)
 
         # Adaptamos el ancho de todo esto al del marco donde lo hemos colocado.
         marco_canvas.rowconfigure(0, weight=1)
         # Y para las columnas, la que contiene la barra de desplazamiento debe
         # tener una anchura fija,
-        marco_canvas.columnconfigure(1, minsize=barra.winfo_reqwidth())
+        marco_canvas.columnconfigure(1, minsize=self.__barra.winfo_reqwidth())
         # Y el resto se lo queda el marco que contiene los datos.
         marco_canvas.columnconfigure(0, weight=1)
 
         # Finalmente, construimos el marco donde crearemos la tabla con las
         # filas de datos.
-        self.marco_tabla = tkinter.Frame(canvas, bg=BORDE)
+        self.marco_tabla = tkinter.Frame(self.__canvas, bg=BORDE)
         # Este marco debe ir dentro del canvas para que se pueda desplazar.
-        canvas.create_window(
-            (0, 0), window=self.marco_tabla, anchor="nw", tags="frame")
+        self.__canvas.create_window(
+            (1, 1), window=self.marco_tabla, anchor="nw", tags="frame")
 
         # Dentro de la cabecera añadimos los datos.
         for col, dato in enumerate(cabecera):
@@ -179,7 +179,7 @@ class Tabla(object):
         # Añadimos una última columna, del tamaño de la barra de desplazamiento,
         # para que conserven el mismo tamaño la cabecera y el resto de filas.
         marco_cabecera.columnconfigure(
-            self.__columnas, minsize=barra.winfo_reqwidth(), weight=0)
+            self.__columnas, minsize=self.__barra.winfo_reqwidth(), weight=0)
 
         # Guardamos el ancho actual del marco, que se corresponderá con el
         # ancho mínimo, para que la ventana contenedora se ajuste su valor
@@ -187,88 +187,11 @@ class Tabla(object):
         marco.update_idletasks()
         self.__ancho_tabla = marco_cabecera.winfo_reqwidth()
 
-        #  Definición de eventos relacionados con el desplazamiento vertical
-        # de la tabla cuando existen más filas de las que caben.
-
-        def teclas_cursor(event):
-            # Desplazamiento con las teclas de cursor.
-            if event.keysym == "Up":
-                canvas.yview_scroll(-1, "units")  # Mover hacia arriba
-            elif event.keysym == "Down":
-                canvas.yview_scroll(1, "units")  # Mover hacia abajo
-
-        def rueda_raton(event):
-            # Desplazamiento con el ratón.
-            if sys.platform == "Windows":  # Windows
-                canvas.yview_scroll(-int(event.delta / 120), "units")
-            elif sys.platform == "Darwin":  # macOS
-                canvas.yview_scroll(-int(event.delta), "units")
-            elif sys.platform == "linux" or sys.platform == "linux2":  # Linux
-                if event.num == 4:
-                    canvas.yview_scroll(-1, "units")  # Scroll up
-                elif event.num == 5:
-                    canvas.yview_scroll(1, "units")  # Scroll down
-
-        def actualizar_tamaño(__):
-
-            # Capturamos la altura actual del marco que contiene los datos,
-            # para determinar la porción de tabla que se ve sobre la ventana.
-            r = canvas.bbox("frame")
-
-            # Si la tabla se queda sin datos, el tamaño del marco no se
-            # actualiza, con lo que no se genera el evento de redimensionamiento
-            # y por tanto no se queda con su altura igual a 0
-            if len(self.__controles) == 0:
-                # Fijamos su tamaño a 1 píxel, para que se siga representando
-                # el borde.
-                canvas.itemconfig('frame', height=1)
-            else:
-                # Fijamos su tamaño al ancho que requiere (si no hacemos esto,
-                # una vez se ejecute la instrucción del if, siempre se queda
-                # en tamaño igual a 1.
-                canvas.itemconfig(
-                    'frame', height=self.marco_tabla.winfo_reqheight())
-            # NOTA: Comenzamos la región en 1, para evitar que salga una línea
-            # blanca en la parte superior de la tabla.
-            canvas.configure(scrollregion=(1, 1, r[2], r[3]))
-            # Hacemos que el ancho del frame donde se crea la tabla se ajuste
-            # al ancho del canvas donde lo hemos añadido.
-            canvas.itemconfig('frame', width=canvas.winfo_width())
-
-            # Si el marco es más pequeño que el Canvas, deshabilitamos todas
-            # las funciones de desplazamiento vertical.
-            if self.marco_tabla.winfo_height() <= canvas.winfo_height():
-                # Deshabilitamos el desplazamiento con la rueda del ratón
-                canvas.unbind_all("<MouseWheel>")
-                canvas.unbind_all("<Button-4>")
-                canvas.unbind_all("<Button-5>")
-                # Deshabilitamos el desplazamiento con las teclas de cursor.
-                canvas.unbind_all("<Up>")
-                canvas.unbind_all("<Down>")
-                # Desconectamos la barra de desplazamiento
-                canvas.config(yscrollcommand="")
-                # Oculta la barra de desplazamiento
-                barra.grid_forget()
-            else:
-                # En caso de que el marco sea más grande que el canvas:
-                # habilitamos el desplazamiento con la rueda del ratón.
-                if sys.platform == "linux" or sys.platform == "linux2":
-                    canvas.bind_all("<Button-4>", rueda_raton)
-                    canvas.bind_all("<Button-5>", rueda_raton)
-                elif sys.platform == "win32" or "darwin":
-                    canvas.bind_all("<MouseWheel>", rueda_raton)
-                # Habilitamos el desplazamiento con las teclas de cursor.
-                canvas.bind_all("<Up>", teclas_cursor)
-                canvas.bind_all("<Down>", teclas_cursor)
-                # Conectamos la barra de desplazamiento
-                canvas.config(yscrollcommand=barra.set)
-                barra.grid(row=0, column=1, sticky="ns")
-
         # Asociamos eventos para que se ajuste todo cuando cambie el tamaño del
         # canvas (porque se ha redimensionado la ventana principal) o el marco
         # (porque se han añadido / quitado filas).
-        self.marco_tabla.bind("<Configure>", actualizar_tamaño)
-        canvas.bind("<Configure>", actualizar_tamaño)
+        self.marco_tabla.bind("<Configure>", self.__actualizar_tamaño)
+        self.__canvas.bind("<Configure>", self.__actualizar_tamaño)
 
         # Creamos un diccionario para guardar la lista de etiquetas que
         # representan las celdas, para poder acceder a ellas cuando queramos
@@ -323,7 +246,7 @@ class Tabla(object):
         # de la tabla, ya que en ocasiones la actualización no se produce.
         if len(self.__controles) != total:
             self.marco_tabla.update_idletasks()
-            self.marco_tabla.event_generate("<Configure>")
+            self.__actualizar_tamaño()
 
     def añadir_fila(self, fila, valores):
         """
@@ -492,6 +415,83 @@ class Tabla(object):
 
 ################################################################################
 ################################################################################
+    def __actualizar_tamaño(self, event=None):
+
+        # Capturamos la altura actual del marco que contiene los datos,
+        # para determinar la porción de tabla que se ve sobre la ventana.
+        r = self.__canvas.bbox("frame")
+        # NOTA: Comenzamos la región en 1, para evitar que salga una línea
+        # blanca en la parte superior de la tabla.
+        self.__canvas.configure(scrollregion=(2, 2, r[2], r[3]))
+
+        # Si la tabla se queda sin datos, el tamaño del marco no se
+        # actualiza, con lo que no se genera el evento de redimensionamiento
+        # y por tanto no se queda con su altura igual a 0
+        if len(self.__controles) == 0:
+            # Fijamos su tamaño a 1 píxel, para que se siga representando
+            # el borde.
+            altura = 1
+        else:
+            # Fijamos su tamaño al ancho que requiere (si no hacemos esto,
+            # una vez se ejecute la instrucción del if, siempre se queda
+            # en tamaño igual a 1.
+            altura = self.marco_tabla.winfo_reqheight()
+
+        self.__canvas.itemconfig('frame', height=altura)
+        # Hacemos que el ancho del frame donde se crea la tabla se ajuste
+        # al ancho del canvas donde lo hemos añadido.
+        self.__canvas.itemconfig('frame', width=self.__canvas.winfo_width())
+
+        # Si el marco es más pequeño que el Canvas, deshabilitamos todas
+        # las funciones de desplazamiento vertical.
+        if self.marco_tabla.winfo_reqheight() <= self.__canvas.winfo_height():
+            # Movemos el canvas
+            self.__canvas.yview("moveto", 0.0)
+            # Deshabilitamos el desplazamiento con la rueda del ratón
+            self.__canvas.unbind_all("<MouseWheel>")
+            self.__canvas.unbind_all("<Button-4>")
+            self.__canvas.unbind_all("<Button-5>")
+            # Deshabilitamos el desplazamiento con las teclas de cursor.
+            self.__canvas.unbind_all("<Up>")
+            self.__canvas.unbind_all("<Down>")
+            # Ocultamos la barra de desplazamiento
+            self.__barra.grid_forget()
+        else:
+            # En caso de que el marco sea más grande que el canvas:
+            # habilitamos el desplazamiento con la rueda del ratón.
+            if sys.platform == "linux" or sys.platform == "linux2":
+                self.__canvas.bind_all("<Button-4>", self.__rueda_raton)
+                self.__canvas.bind_all("<Button-5>", self.__rueda_raton)
+            elif sys.platform == "win32" or "darwin":
+                self.__canvas.bind_all("<MouseWheel>", self.__rueda_raton)
+            # Habilitamos el desplazamiento con las teclas de cursor.
+            self.__canvas.bind_all("<Up>", self.__teclas_cursor)
+            self.__canvas.bind_all("<Down>", self.__teclas_cursor)
+            # Mostramos la barra de desplazamiento
+            self.__barra.grid(row=0, column=1, sticky="ns")
+
+    #  Definición de eventos relacionados con el desplazamiento vertical
+    # de la tabla cuando existen más filas de las que caben.
+
+    def __teclas_cursor(self, event=None):
+        # Desplazamiento con las teclas de cursor.
+        if event.keysym == "Up":
+            self.__canvas.yview_scroll(-1, "units")  # Mover hacia arriba
+        elif event.keysym == "Down":
+            self.__canvas.yview_scroll(1, "units")  # Mover hacia abajo
+
+    def __rueda_raton(self, event=None):
+        # Desplazamiento con el ratón.
+        if sys.platform == "Windows":  # Windows
+            self.__canvas.yview_scroll(-int(event.delta / 120), "units")
+        elif sys.platform == "Darwin":  # macOS
+            self.__canvas.yview_scroll(-int(event.delta), "units")
+        elif sys.platform == "linux" or sys.platform == "linux2":  # Linux
+            if event.num == 4:
+                self.__canvas.yview_scroll(-1, "units")  # Scroll up
+            elif event.num == 5:
+                self.__canvas.yview_scroll(1, "units")  # Scroll down
+
     def __color_celda(self, etiqueta, columna):
         """
         Asigna el color para la celda correspondiente
