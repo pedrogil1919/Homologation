@@ -104,6 +104,8 @@ class Tabla(object):
             raise ValueError(
                 "Error tabla: lista de alineación de columnas incorrecta")
 
+        ########################################################################
+        ########################################################################
         # Construimos un marco para la cabecera
         marco_cabecera = tkinter.Frame(marco, bg=BORDE)
         marco_cabecera.grid(row=0, column=0, sticky="nsew")
@@ -117,6 +119,8 @@ class Tabla(object):
         # y el resto lo debe ocupar la parte de los datos.
         marco.rowconfigure(index=0, minsize=alto_cabecera, weight=0)
         marco.rowconfigure(index=1, weight=1)
+        ########################################################################
+        ########################################################################
 
         # Creamos un Canvas para que se pueda añadir una barra de desplazamiento
         # vertical cuando el número de filas sea grande.
@@ -169,7 +173,7 @@ class Tabla(object):
             etiqueta_aux = tkinter.Label(
                 marco_aux, bg=FONDO_CABECERA, fg=TEXTO_CABECERA,
                 text=dato, font=fuente_cabecera)
-            etiqueta_aux.pack(fill="both", expand=True)
+            etiqueta_aux.pack(fill=tkinter.BOTH, expand=True)
 
             # Ajustamos los anchos de las columnas para las filas.
             self.marco_tabla.columnconfigure(col, weight=ajuste[col])
