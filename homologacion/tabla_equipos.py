@@ -21,6 +21,7 @@ El objeto puede tener dos estados:
 @author: pedrogil
 '''
 
+from magic.compat import NONE
 import tkinter.messagebox
 
 from base_datos import estado
@@ -105,23 +106,29 @@ class TablaEquipos(object):
 
         # Inicialmente arrancamos la aplicación mostrando todos los equipos.
         self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
+
         # Configuración de eventos. La tabla de configuración de la base de
-        # datos nos indica sobre que columnas se deben ejecutar los eventos
+        # datos nos indica sobre qué columnas se deben ejecutar los eventos
         # de edición de puntos, y sobre que columnas los de cambio de registro.
-#        eventos = self.__conexion.configuracion_eventos()
         eventos = self.__conexion.cabecera_eventos
-        for n, evento in enumerate(eventos):
+        for columna, evento in enumerate(eventos):
             if evento is None:
                 continue
             elif evento == 0:
                 # El código 0 se refiere a cambio de registro.
                 self.__tabla_equipos.añadir_evento(
-                    "<Double-1>", n, self.registrar)
+                    "<Double-1>", columna, self.registrar)
             else:
                 # El resto de códigos se refieren al número de zona que debe
                 # editar dicho evento.
                 self.__tabla_equipos.añadir_evento(
-                    "<Double-1>", n, self.editar_zona(evento)(self.editar_zona_aux))
+                    "<Double-1>", columna,
+                    self.editar_zona(evento)(self.editar_zona_aux))
+                # Asignamos también las funciones para calcular el color de
+                # la celda en función del valor de ésta.
+                self.__tabla_equipos.definir_color_columna(
+                    columna, "white",
+                    lambda valor: "green" if int(valor) == 0 else "red")
 
         # Guardamos en esta variable la referencia a la página que estamos
         # editando. Si es None, significa que estamos no estamos editando nada,

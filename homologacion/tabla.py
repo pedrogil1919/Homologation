@@ -277,12 +277,18 @@ class Tabla(object):
         # Creamos una lista de todos los eventos que tenemos que añaidr en las
         # celdas de las tablas.
         self.__eventos = {}
+        # Función para configurar el color de las celdas para cada columna.
+        # Si para una columna concreta la clave no existe en el diccionario,
+        # la celda se representará con el color por defecto.
+        self.__color_columna = {}
 
+################################################################################
+################################################################################
     def refrescar(self, datos):
         """
         Actualizar los datos de la tabla. La función debe recibir los datos
         en un formato similar al descrito en la función formatear_lista_tabla.
-        La función determina que filas han desaparecido y que filas aparecen
+        La función determina qué filas han desaparecido y qué filas aparecen
         para eliminarlas / añadirlas. Para el resto de filas, actualiza los
         valores de las etiquetas.
 
@@ -350,9 +356,11 @@ class Tabla(object):
             marco_celda.pack_propagate(False)
             # Y creamos la etiqueta dentro del marco anterior.
             etiqueta_celda = tkinter.Label(
-                marco_celda, bg=FONDO_DATOS, fg=TEXTO_DATOS,
+                marco_celda, fg=TEXTO_DATOS,
                 text=dato, font=self.__fuente_datos,
                 anchor=ANCHOR[self.__alineacion[col]], padx=10)
+            # Asighamos el color de la celda en función de la configuración
+            self.__color_celda(etiqueta_celda, col)
             etiqueta_celda.pack(fill=tkinter.BOTH, expand=True)
             # comprobamos si hay que añadir también eventos a la etiqueta.
             for ev in self.__eventos.get(col, []):
@@ -398,8 +406,14 @@ class Tabla(object):
 
         etiquetas = controles['L']
         for columna in etiquetas:
-            etiquetas[columna].config(text=valores[columna])
+            etiqueta = etiquetas[columna]
+            # Asignamos el texto de la celda.
+            etiqueta.config(text=valores[columna])
+            # y su color, en fucnión del valor.
+            self.__color_celda(etiqueta, columna)
 
+################################################################################
+################################################################################
     def añadir_evento(self, evento, columna, funcion):
         """
         Añade un evento en una columna determinada para todas las filas
@@ -407,10 +421,11 @@ class Tabla(object):
         requerido por la función bind de tkinter (ej, "<Button-1>", "<Double-1>"
 
         """
-        if self.__ancho[columna] == 0:
-            # Si el ancho es 0, significa que no se ha añadido la columna,
-            # por lo que tampoco añadiremos el evento.
-            return
+        # TODO: Creo que esto no hace falta.
+        # if self.__ancho[columna] == 0:
+        #     # Si el ancho es 0, significa que no se ha añadido la columna,
+        #     # por lo que tampoco añadiremos el evento.
+        #     return
         try:
             # Para cada evento, guardamos el nombre del evento, y la función
             # asociada a dicho evento.
@@ -424,6 +439,25 @@ class Tabla(object):
         for fila, controles in self.__controles.items():
             controles['L'][columna].bind(
                 evento, partial(funcion, fila))
+
+    def definir_color_columna(self, columna, color, funcion=None):
+        """
+        Definir el color para representar una celda
+        Argumentos:
+        - color: código del color de tkinter por defecto para la celda
+        - funcion: función que permite calcular el color de la celda en función
+          del valor de esta. Debe ser una función que devuelva un código de
+          color de tkinter
+
+        La tabla asignará inicialmente el color devuelto por la función. Si
+        el valor devuelto es None, o bien no existe la función, le asignará
+        el color por defecto. Si la clave para una columna no existe, se le
+        asignará el color por defecto de la tabla.
+
+        """
+        self.__color_columna[columna] = {
+            'C': color,
+            'F': funcion}
 
     @staticmethod
     def formatear_lista_tabla(datos):
@@ -456,7 +490,32 @@ class Tabla(object):
             filas[orden] = dato[1:]
         return filas
 
-    def get_ancho_tabla(self):
+################################################################################
+################################################################################
+    def __color_celda(self, etiqueta, columna):
+        """
+        Asigna el color para la celda correspondiente
+
+        """
+        # Comprobamos si el color para esta columna ha sido asignado.
+        try:
+            color_defecto = self.__color_columna[columna]['C']
+            funcion = self.__color_columna[columna]['F']
+        except KeyError:
+            # En caso de que no exista, asignamos el color por defecto de la
+            # tabla
+            color = FONDO_DATOS
+        else:
+            # Comprobamos si tenemos una función para calcular el color de
+            # la celda
+            try:
+                color = funcion(etiqueta["text"])
+            except ValueError:
+                color = color_defecto
+
+        etiqueta.config(bg=color)
+
+    def __get_ancho_tabla(self):
         return self.__ancho_tabla
 
-    ancho_tabla = property(get_ancho_tabla, None, None, None)
+    ancho_tabla = property(__get_ancho_tabla, None, None, None)
