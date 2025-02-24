@@ -10,10 +10,33 @@ import tkinter
 from modelo import base_datos
 from modelo.tabla_equipos import TablaEquipos
 
-# Función para refrescar los datos de la tabla de forma periódica.
+
+def cerrar_aplicacion(__=None):
+    """
+    Control de finalización de la aplicación.
+
+    Comprueba que no estemos editando un equipo antes de cerrar.
+
+    """
+    # si estamos editando un equipo, no dejamos cerrar la
+    # aplicación.
+    if tabla_equipos.edicion:
+        tkinter.messagebox.showinfo(
+            "Cerrar aplicación",
+            "Guarde los cambios del equipo antes de finalizar.")
+        return
+    # Preguntamos al usuario si quiere finalizar la aplicación.
+    if not tkinter.messagebox.askokcancel(
+            "Finalizar", "¿Quiere cerrar la aplicación?"):
+        return
+    ventana_principal.destroy()
 
 
 def temporizador_refrescar():
+    """
+    Función para refrescar los datos de la tabla de forma periódica.
+
+    """
     ventana_principal.after(500, temporizador_refrescar)
     tabla_equipos.refrescar_tabla()
     estadisticas.config(text=bd.resumen_equipos())
@@ -71,6 +94,9 @@ elif sys.platform == "darwin":
 elif sys.platform == "win32":
     ventana_principal.state('zoomed')
 
+# Tecla Escape para salir de la aplicación
+ventana_principal.bind("<Escape>", cerrar_aplicacion)
+ventana_principal.protocol("WM_DELETE_WINDOW", cerrar_aplicacion)
 # Activamos el temporizador.
 temporizador_refrescar()
 
