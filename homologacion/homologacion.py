@@ -73,9 +73,9 @@ estadisticas = tkinter.Label(barra_estado, text=bd.resumen_equipos())
 estadisticas.pack(side=tkinter.RIGHT, padx=10)
 
 # Configuración del ajuste de tamaños.
-ventana_principal.columnconfigure(0, weight=0)
-ventana_principal.columnconfigure(1, weight=1)
-ventana_principal.columnconfigure(2, weight=0)
+ventana_principal.columnconfigure(0, weight=1)
+ventana_principal.columnconfigure(1, weight=5, minsize=200)
+# ventana_principal.columnconfigure(2, weight=0)
 ventana_principal.rowconfigure(1, weight=1)
 
 # Crear objeto donde se colocará la tabla de equipos.
@@ -83,7 +83,7 @@ tabla_equipos = TablaEquipos(tabla, bd, puntos)
 
 # Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
 # equipos.
-ventana_principal.minsize(tabla_equipos.ancho, 300)
+ventana_principal.minsize(tabla_equipos.ancho+200, 300)
 
 # Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
 # depende del sistema operativo.
