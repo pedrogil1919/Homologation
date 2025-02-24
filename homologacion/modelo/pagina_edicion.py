@@ -63,10 +63,15 @@ class Pagina(object):
         botones = tkinter.Frame(self.__marco, bg="gray90")
         botones.grid(row=2, column=0, columnspan=2, sticky="nsew")
 
-        tkinter.Button(botones, text="Cancelar", command=self.cancelar).pack(
-            side=tkinter.RIGHT, padx=10, pady=10)
-        tkinter.Button(botones, text="Guardar", command=self.guardar).pack(
-            side=tkinter.RIGHT, padx=10, pady=10)
+        b1 = tkinter.Button(botones, text="Cancelar", command=self.cancelar)
+        b2 = tkinter.Button(botones, text="Guardar", command=self.guardar)
+
+        b1.pack(side=tkinter.RIGHT, padx=10, pady=10)
+        b2.pack(side=tkinter.RIGHT, padx=10, pady=10)
+
+        b1.bind("<Return>", lambda __: self.cancelar())
+        b2.bind("<Return>", lambda __: self.guardar())
+        b2.focus_set()
 
         # Ajustamos para que todo el espacio sobrante lo ocupe el marco que
         # mostrará los puntos de homologación.
