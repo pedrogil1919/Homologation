@@ -112,7 +112,7 @@ class Pagina(object):
             color = COLOR_SI if elemento["valor"] == 0 else COLOR_NO
             etiqueta = tkinter.Label(
                 self.__pagina, text=elemento["descripcion"], bg=color,
-                anchor="w", justify=tkinter.LEFT, padx=15, pady=5)
+                anchor="w", justify=tkinter.LEFT, padx=10, pady=5)
             etiqueta.grid(row=fila, column=0, sticky="nsew", pady=1)
 
             # Asociamos el evento del ratón con la función que permite cambiar
@@ -181,8 +181,10 @@ class Pagina(object):
         self.__canvas.itemconfig('frame', width=ancho)
         # Ajustamos el parámetro wrraplength para que las etiquetas sean
         # multilinea para aquellos puntos que sean muy largos.
+        # NOTA: hay que tener en cuenta que el ancho de la etiqueta es igual
+        # a la longitud del texto, más el margen (padx * 2).
         for control in self.__pagina.winfo_children():
-            control.config(wraplength=ancho)
+            control.config(wraplength=ancho - 2*control["padx"])
 
         # Actualizamos la página, para que se recalcule el espacio requerido
         # una vez se sepa el número de líneas que ocupa cada etiqueta.
