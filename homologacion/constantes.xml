@@ -3,13 +3,14 @@
     
     <cabecera>
         <ORDEN/>
-        <ID_EQUIPO nombre="DORSAL" ancho="120" alineacion="C" ajuste="0" zona="" />
-        <equipo    nombre="NOMBRE" ancho="300" alineacion="L" ajuste="1" zona="0"/>
-        <Z1        nombre="Z1"     ancho= "40" alineacion="C" ajuste="0" zona="1"/>
-        <Z2        nombre="Z2"     ancho= "40" alineacion="C" ajuste="0" zona="2"/>
-        <Z3        nombre="Z3"     ancho= "40" alineacion="C" ajuste="0" zona="3"/>
+        <ID_EQUIPO NOMBRE="DORSAL" ANCHO="120" ALINEACION="C" AJUSTE="0" ZONA="" />
+        <equipo    NOMBRE="NOMBRE" ANCHO="300" ALINEACION="L" AJUSTE="1" ZONA="0"/>
+        <Z1        NOMBRE="Z1"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="1"/>
+        <Z2        NOMBRE="Z2"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="2"/>
+        <Z3        NOMBRE="Z3"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="3"/>
     </cabecera>
 
+	<pagina ANCHO="300"/>
     <graficos DIRECTORIO="graficos/">
         <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="0.5" />
     </graficos>

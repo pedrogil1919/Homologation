@@ -448,7 +448,7 @@ class Tabla(object):
                 valor = configuracion[campo["Field"]]
                 # Comprobamos que la columna tenga el campo nombre.
                 try:
-                    valor["nombre"]
+                    valor["NOMBRE"]
                 except KeyError:
                     # En caso contrario, significa que esta columna no hay que
                     # añadirla.
@@ -465,12 +465,12 @@ class Tabla(object):
             else:
                 # Si el campo existe, copiamos todos los datos de configuración
                 # de la columna.
-                nombre += [valor["nombre"]]
-                ancho += [int(valor["ancho"])]
-                alineacion += [valor["alineacion"]]
-                ajuste += [int(valor["ajuste"])]
+                nombre += [valor["NOMBRE"]]
+                ancho += [int(valor["ANCHO"])]
+                alineacion += [valor["ALINEACION"]]
+                ajuste += [int(valor["AJUSTE"])]
                 try:
-                    zona = int(valor["zona"])
+                    zona = int(valor["ZONA"])
                 except ValueError:
                     zona = None
                 eventos += [zona]
