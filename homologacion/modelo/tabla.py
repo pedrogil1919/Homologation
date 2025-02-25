@@ -423,6 +423,66 @@ class Tabla(object):
             filas[orden] = dato[1:]
         return filas
 
+    @staticmethod
+    def configuracion_columnas(columnas, configuracion):
+        """
+        Devuelve las listas de configuración de columnas.
+
+        Argumentos:
+        - columnas: lista de columnas de la vista que queremos configurar,
+          obtenida con el comando SQL "SHOW COLUMNS FROM NombreVista"
+        - configuracion: dicionario, donde cada
+
+        """
+        # Creamos las listas para cada uno de los parámetros de configuración.
+        nombre = []
+        ancho = []
+        alineacion = []
+        ajuste = []
+        eventos = []
+        # Para cada columna de la vista,
+        for campo in columnas:
+            try:
+                # Comprobamos que el nombre de la columna exista en la lista de
+                # configuración.
+                valor = configuracion[campo["Field"]]
+                # Comprobamos que la columna tenga el campo nombre.
+                try:
+                    valor["nombre"]
+                except KeyError:
+                    # En caso contrario, significa que esta columna no hay que
+                    # añadirla.
+                    continue
+            except KeyError:
+                # Si no existe en la lista de configuración, significa que esta
+                # columna no hay que mostrarla. Eso se indica poniendo a 0 en
+                # campo ancho. El resto da igual
+                nombre += [""]
+                ancho += [0]
+                alineacion += ["N"]
+                ajuste += [0]
+                eventos += [None]
+            else:
+                # Si el campo existe, copiamos todos los datos de configuración
+                # de la columna.
+                nombre += [valor["nombre"]]
+                ancho += [int(valor["ancho"])]
+                alineacion += [valor["alineacion"]]
+                ajuste += [int(valor["ajuste"])]
+                try:
+                    zona = int(valor["zona"])
+                except ValueError:
+                    zona = None
+                eventos += [zona]
+
+        return {
+            "nombre": nombre,
+            "ancho": ancho,
+            "alineacion": alineacion,
+            "ajuste": ajuste,
+            "eventos": eventos}
+
+
 ################################################################################
 ################################################################################
     def __actualizar_tamaño(self, event=None):

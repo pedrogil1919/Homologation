@@ -258,37 +258,50 @@ class Conexion():
         self.__conexion.rollback()
         self.__conexion.autocommit = True
 
+    def columnas(self):
+        """
+        Devuelve los nombres de todas las columnas de la vista ListaEquipos.
+
+        """
+        # Obtenemos los nombres de las columnas que forman la vista.
+        cursor = self.__conexion.cursor(dictionary=True, prepared=True)
+        cursor.execute("SHOW COLUMNS FROM ListaEquipos")
+        columnas = cursor.fetchall()
+        return columnas
+
 ################################################################################
 ################################################################################
 ################################################################################
-
-    def get_cabecera(self, columna):
-        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
-        cursor.execute("SELECT %s FROM ConfigVistaListaEquipos" % columna)
-        lista = cursor.fetchall()
-        datos = [fila[0] for fila in lista]
-        return datos
-
-    def get_cabecera_nombre(self):
-        return self.get_cabecera("nombre")
-
-    def get_cabecera_ancho(self):
-        return self.get_cabecera("ancho")
-
-    def get_cabecera_alineacion(self):
-        return self.get_cabecera("alineacion")
-
-    def get_cabecera_ajuste(self):
-        return self.get_cabecera("ajuste")
-
-    def get_cabecera_eventos(self):
-        return self.get_cabecera("zona")
-
-    cabecera_nombre = property(get_cabecera_nombre, None, None, None)
-    cabecera_ancho = property(get_cabecera_ancho, None, None, None)
-    cabecera_alineacion = property(get_cabecera_alineacion, None, None, None)
-    cabecera_ajuste = property(get_cabecera_ajuste, None, None, None)
-    cabecera_eventos = property(get_cabecera_eventos, None, None, None)
+    # """
+    # def get_cabecera(self, columna):
+    #     cursor = self.__conexion.cursor(dictionary=False, prepared=False)
+    #     cursor.execute("SELECT %s FROM ConfigVistaListaEquipos" % columna)
+    #     lista = cursor.fetchall()
+    #     datos = [fila[0] for fila in lista]
+    #     return datos
+    #
+    # def get_cabecera_nombre(self):
+    #     return self.get_cabecera("nombre")
+    #
+    # def get_cabecera_ancho(self):
+    #     return self.get_cabecera("ancho")
+    #
+    # def get_cabecera_alineacion(self):
+    #     return self.get_cabecera("alineacion")
+    #
+    # def get_cabecera_ajuste(self):
+    #     return self.get_cabecera("ajuste")
+    #
+    # def get_cabecera_eventos(self):
+    #     return self.get_cabecera("zona")
+    #
+    # cabecera_nombre = property(get_cabecera_nombre, None, None, None)
+    # cabecera_ancho = property(get_cabecera_ancho, None, None, None)
+    # cabecera_alineacion = property(get_cabecera_alineacion, None, None, None)
+    # cabecera_ajuste = property(get_cabecera_ajuste, None, None, None)
+    # cabecera_eventos = property(get_cabecera_eventos, None, None, None)
+    # """
+    #
 
 
 ###############################################################################

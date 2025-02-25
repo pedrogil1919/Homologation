@@ -79,26 +79,13 @@ def leer_conexion():
 
 
 @captura_error
-def leer_campos():
+def leer_cabecera():
     raiz = archivo_xml.getroot()
-    elemento = raiz.find("conexion")
-    campos = ()
-    datos_campos = elemento.findall("campo")
-    for campo in datos_campos:
-        campos += (int(campo.attrib["id"]),)
-
-    return campos
-
-
-@captura_error
-def leer_arbitros():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("conexion")
-    arbitros = ()
-    datos_arbitros = elemento.findall("arbitro")
-    for arbitro in datos_arbitros:
-        arbitros += (int(arbitro.attrib["id"]),)
-    return arbitros
+    elemento = raiz.find("cabecera")
+    datos_cabecera = {}
+    for columna in elemento:
+        datos_cabecera[columna.tag] = columna.attrib
+    return datos_cabecera
 
 
 @captura_error

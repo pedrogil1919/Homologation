@@ -23,6 +23,7 @@ El objeto puede tener dos estados:
 
 import tkinter.messagebox
 
+from leer_constantes import leer_cabecera
 from modelo.base_datos import estado
 from modelo.pagina_edicion import Pagina
 from modelo.tabla import Tabla
@@ -94,14 +95,17 @@ class TablaEquipos(object):
 
         # Obtenemos los datos de configuración de la cabecera desde la
         # base de datos.
-#        cabecera, ancho, alineacion, ajuste = self.__conexion.configuracion_tabla()
-        nombre = self.__conexion.cabecera_nombre
-        ancho = self.__conexion.cabecera_ancho
-        alineacion = self.__conexion.cabecera_alineacion
-        ajuste = self.__conexion.cabecera_ajuste
+        cabecera = leer_cabecera()
+        columnas = self.__conexion.columnas()
+        configuracion = Tabla.configuracion_columnas(columnas, cabecera)
         # Creamos la tabla, junto con su formato.
-        self.__tabla_equipos = Tabla(tabla, nombre, ancho, ajuste, alineacion,
-                                     50, 45, FUENTE_CABECERA, FUENTE_DATOS)
+        self.__tabla_equipos = Tabla(
+            tabla,
+            configuracion["nombre"],
+            configuracion["ancho"],
+            configuracion["ajuste"],
+            configuracion["alineacion"],
+            50, 45, FUENTE_CABECERA, FUENTE_DATOS)
 
         # Inicialmente arrancamos la aplicación mostrando todos los equipos.
         self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
@@ -109,8 +113,7 @@ class TablaEquipos(object):
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre qué columnas se deben ejecutar los eventos
         # de edición de puntos, y sobre que columnas los de cambio de registro.
-        eventos = self.__conexion.cabecera_eventos
-        for columna, evento in enumerate(eventos):
+        for columna, evento in enumerate(configuracion["eventos"]):
             if evento is None:
                 continue
             elif evento == 0:

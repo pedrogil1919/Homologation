@@ -1,0 +1,39 @@
+<EurobotHomologacion>
+    <conexion HOST="localhost" BASE="eurobot_current" USER="homologador" PASS="homologador" SAVE="TRUE"></conexion>
+    
+    <cabecera>
+        <ORDEN/>
+        <ID_EQUIPO nombre="DORSAL" ancho="120" alineacion="C" ajuste="0" zona="" />
+        <equipo    nombre="NOMBRE" ancho="300" alineacion="L" ajuste="1" zona="0"/>
+        <Z1        nombre="Z1"     ancho= "40" alineacion="C" ajuste="0" zona="1"/>
+        <Z2        nombre="Z2"     ancho= "40" alineacion="C" ajuste="0" zona="2"/>
+        <Z3        nombre="Z3"     ancho= "40" alineacion="C" ajuste="0" zona="3"/>
+    </cabecera>
+
+    <graficos DIRECTORIO="graficos/">
+        <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="0.5" />
+    </graficos>
+    
+
+    <fuente FAMILIA="LIBERATION SANS" TAMAÑO="10" ESTILO="" /> 
+
+    <partidos TIPO_ACCESO="EN JUEGO" TIEMPO_CONEXION="1000">
+    </partidos>
+
+    <resultados PNG_GUARDAR="False" TIEMPO_REFRESCO="100" TIEMPO_APAGADO="0" PNG_HOST="www.eurobot.es" PNG_USER="arbitros" PNG_DIR="/var/www/html/resultados/" PNG_PASS="YmV8Wh#9h6mhIm" />
+    
+    <graficos DIRECTORIO="graficos25/" ACCIONES="acciones/">
+        <iconos DIRECTORIO="iconos/32/" ICONO_CONECTAR="conectar.png" ICONO_GUARDAR="guardar.png" ICONO_FINALIZAR="finalizar.png" ICONO_DESCONECTAR="desconectar.png" ICONO_RESULTADO="resultado.png" ICONO_CERRAR="cerrar.png" ICONO_MARCAR="marcar.png" ICONO_LUPA_MAS="lupa_mas.png" ICONO_LUPA_MENOS="lupa_menos.png" ICONO_GIRAR="girar.png" />
+        
+        <logos DIRECTORIO="logos/" TITULO="Eurobot Spain 2025" ICONO="iconoEurobotSpain.png" LOGO_FONDO="alcabot.png" LOGO_CABECERA="eurobotSpain.png" COLOR_LOGO_FONDO="#C8C8C8" MAPA="mapa.png" COLOR_FONDO="#FFFFFF" />
+        <inicio DIRECTORIO="inicio/" IMAGEN="splash.png" TIEMPO="1.5" />
+        <equipos DIRECTORIO="equipos/" />
+    </graficos>
+    <teclado> 
+    	<atajo ARBITRO="1" ARCHIVO="atajosIZ.ods" />
+    	<atajo ARBITRO="2" ARCHIVO="atajosDR.ods" />
+    	<atajo ARBITRO="3" ARCHIVO="atajosFN.ods" />
+    </teclado>
+    <escalado ZOOM="FALSE" BORDE="20" BARRA="TRUE" VERTICAL="FALSE" GIRAR="FALSE" />
+
+</EurobotHomologacion>
