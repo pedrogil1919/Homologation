@@ -5,10 +5,13 @@ Created on 3 feb 2025
 '''
 
 import sys
+import time
 import tkinter
 
-from modelo import base_datos
-from modelo.tabla_equipos import TablaEquipos
+from leer_constantes import abrir_archivo_xml, leer_conexion
+from modelo.base_datos import Conexion
+from vista.tabla_equipos import TablaEquipos
+from vista.ventana_inicio import crear_ventana_inicio
 
 
 def cerrar_aplicacion(__=None):
@@ -39,15 +42,53 @@ def temporizador_refrescar():
     """
     ventana_principal.after(500, temporizador_refrescar)
     tabla_equipos.refrescar_tabla()
-    estadisticas.config(text=bd.resumen_equipos())
+    estadisticas.config(text=conexion.resumen_equipos())
 
 
-# Abrir conexión.
-bd = base_datos.Conexion(
-    "homologador",
-    "homologador",
-    "localhost",
-    "eurobot_current")
+################################################################################
+# Abrir archivo de configuración.
+################################################################################
+try:
+    archivo_config = sys.argv[1]
+except Exception:
+    archivo_config = "constantes.xml"
+# Abrir archivo xml con las constantes.
+try:
+    abrir_archivo_xml(archivo_config)
+except Exception as error:
+    tkinter.messagebox.showerror("Archivo de configuracion", error)
+    exit(1)
+
+conexion = leer_conexion()
+tiempo_inicio = time.time()
+ventana_inicio, tiempo = crear_ventana_inicio()
+try:
+    conexion = Conexion(
+        conexion["USER"],
+        conexion["PASS"],
+        conexion["HOST"],
+        conexion["BASE"])
+except ValueError as error:
+    ventana_inicio.destroy()
+    tkinter.messagebox.showerror(
+        "Error", "%s Revise el archivo de configuración. "
+        "Se cerrará la aplicación." % error)
+    exit()
+
+# Antes de cerrar la ventana de inicio, esperamos al menos el tiempo indicado
+# en el archivo de configuración, ya que si la conexión es rápida apenas se
+# muestra esta primera ventana.
+while(time.time() - tiempo_inicio < tiempo):
+    time.sleep(0.1)
+# Eliminamos la ventana para poder crear la ventana principal.
+ventana_inicio.destroy()
+
+# # Abrir conexión.
+# bd = base_datos.Conexion(
+#     "homologador",
+#     "homologador",
+#     "localhost",
+#     "eurobot_current")
 
 # Ventana principal
 ventana_principal = tkinter.Tk()
@@ -67,9 +108,9 @@ puntos.grid(row=1, column=1, sticky="nsew")
 # Creamos un marco para mostrar la barra de estado.
 barra_estado = tkinter.Frame(ventana_principal)
 barra_estado.grid(row=2, column=0, columnspan=2, sticky="ews")
-tkinter.Label(barra_estado, text=bd).pack(
+tkinter.Label(barra_estado, text=conexion).pack(
     side=tkinter.LEFT, padx=10)
-estadisticas = tkinter.Label(barra_estado, text=bd.resumen_equipos())
+estadisticas = tkinter.Label(barra_estado, text=conexion.resumen_equipos())
 estadisticas.pack(side=tkinter.RIGHT, padx=10)
 
 # Configuración del ajuste de tamaños.
@@ -79,7 +120,7 @@ ventana_principal.columnconfigure(1, weight=5, minsize=200)
 ventana_principal.rowconfigure(1, weight=1)
 
 # Crear objeto donde se colocará la tabla de equipos.
-tabla_equipos = TablaEquipos(tabla, bd, puntos)
+tabla_equipos = TablaEquipos(tabla, conexion, puntos)
 
 # Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
 # equipos.
