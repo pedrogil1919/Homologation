@@ -12,6 +12,8 @@ import tkinter
 
 import mariadb
 
+from modelo.desplazamiento_tabla import Desplazamiento
+
 
 COLOR_SI = "PaleGreen1"
 COLOR_NO = "coral1"
@@ -124,6 +126,12 @@ class Pagina(object):
         self.__pagina.columnconfigure(0, weight=1)
         self.__canvas.bind("<Configure>", self.__actualizar_tamaño)
 
+        # Añadimos un módulo para implementar las funciones de desplazamiento
+        # vertical de la página si el número de puntos a revisar es elevado y
+        # no coge en la ventana.
+        self.__vertical = Desplazamiento(
+            self.__canvas, self.__pagina, self.__barra)
+
     def guardar(self):
         """
         Guardar todos los datos realizados hasta el momento y finalizar.
@@ -197,9 +205,6 @@ class Pagina(object):
         self.__canvas.itemconfig(
             'frame', height=self.__pagina.winfo_reqheight())
 
-        # Comprobamos si necesitamos scroll o no.
-        if self.__pagina.winfo_reqheight() <= self.__canvas.winfo_height():
-            self.__canvas.yview("moveto", 0.0)
-            self.__barra.grid_forget()
-        else:
-            self.__barra.grid(row=0, column=1, sticky="ns")
+        # Comprobamos si debemos habilitar o no las funciones de desplazamiento
+        # vetical de la página.
+        self.__vertical.desp_vertical = True
