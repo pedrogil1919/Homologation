@@ -21,7 +21,6 @@ El objeto puede tener dos estados:
 @author: pedrogil
 '''
 
-from magic.compat import NONE
 import tkinter.messagebox
 
 from modelo.base_datos import estado
@@ -143,7 +142,8 @@ class TablaEquipos(object):
         if self.__pagina_edicion is not None:
             tkinter.messagebox.showwarning(
                 "Edición puntos homologación",
-                "Guarde los datos del equipo actual antes de editar otro equipo.")
+                "Guarde los datos del equipo actual "
+                "antes de editar otro equipo.")
             return
         # Obtenemos el nombre del equipo para mostrarselo al usuario.
         nombre = self.__conexion.datos_equipo(fila)
@@ -189,6 +189,9 @@ class TablaEquipos(object):
             return
         # Creamos una nueva página para editar los puntos de la zona.
         try:
+            # Deshabilitamos las funciones de desplazamiento vertical de la
+            # tabla.
+            self.__tabla_equipos.desp_vertical = False
             self.__pagina_edicion = Pagina(
                 self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
         except BlockingIOError as e:
@@ -228,6 +231,8 @@ class TablaEquipos(object):
         # Y ponemos su estado en modo lectura, hasta que abramos una nueva
         # página.
         self.__pagina_edicion = None
+        # Habilitamos las funciones de desplazamiento vertical de la tabla.
+        self.__tabla_equipos.desp_vertical = True
 
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla

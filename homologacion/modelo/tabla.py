@@ -94,6 +94,9 @@ class Tabla(object):
         # self.__fuente_cabecera = fuente_cabecera
         # Guardamos la forma de alinear el texto de las etiquetas.
         self.__alineacion = alineacion
+        # Al iniciar la tabla, permitimos la activación del desplazamiento
+        # vertical de la tabla.
+        self.__desp_vertical = True
         # Comprobamos que todos los argumentos tengan el mismo número de
         # elementos.
         self.__columnas = len(ancho)
@@ -441,16 +444,78 @@ class Tabla(object):
             # en tamaño igual a 1.
             altura = self.marco_tabla.winfo_reqheight()
 
+        self.__configurar_desp_vertical()
+
         self.__canvas.itemconfig('frame', height=altura)
         # Hacemos que el ancho del frame donde se crea la tabla se ajuste
         # al ancho del canvas donde lo hemos añadido.
         self.__canvas.itemconfig('frame', width=self.__canvas.winfo_width())
 
-        # Si el marco es más pequeño que el Canvas, deshabilitamos todas
-        # las funciones de desplazamiento vertical.
-        if self.marco_tabla.winfo_reqheight() <= self.__canvas.winfo_height():
-            # Movemos el canvas
-            self.__canvas.yview("moveto", 0.0)
+################################################################################
+################################################################################
+    #  Definición de eventos relacionados con el desplazamiento vertical
+    # de la tabla cuando existen más filas de las que caben.
+################################################################################
+################################################################################
+    def __teclas_cursor(self, event=None):
+        """
+        Desplazamiento con las teclas de cursor.
+
+        """
+        if event.keysym == "Up":
+            self.__canvas.yview_scroll(-1, "units")  # Mover hacia arriba
+        elif event.keysym == "Down":
+            self.__canvas.yview_scroll(1, "units")  # Mover hacia abajo
+
+    def __rueda_raton(self, event=None):
+        """
+        Desplazamiento con el ratón.
+
+        """
+        if sys.platform == "Windows":  # Windows
+            self.__canvas.yview_scroll(-int(event.delta / 120), "units")
+        elif sys.platform == "Darwin":  # macOS
+            self.__canvas.yview_scroll(-int(event.delta), "units")
+        elif sys.platform == "linux" or sys.platform == "linux2":  # Linux
+            if event.num == 4:
+                self.__canvas.yview_scroll(-1, "units")  # Scroll up
+            elif event.num == 5:
+                self.__canvas.yview_scroll(1, "units")  # Scroll down
+
+    def __set_desp_vertical(self, habilitar=True):
+        """
+        Configuración global
+
+        """
+        # Guardamos la opción seleccionada en la variable global.
+        self.__desp_vertical = habilitar
+        # Y configuramos todo el sistema de desplazamiento vertical.
+        self.__configurar_desp_vertical()
+
+    def __configurar_desp_vertical(self):
+        """
+        Configuración de todos los sistemas de desplazamiento.
+
+        """
+        # Obtenmemos las alturas de ambos cuadros.
+        alto_tabla = self.marco_tabla.winfo_reqheight()
+        alto_canvas = self.__canvas.winfo_height()
+        if not self.__desp_vertical or alto_tabla <= alto_canvas:
+            # Si el marco es más pequeño que el Canvas, deshabilitamos todas
+            # las funciones de desplazamiento vertical.
+            # O si el se ha seleccionado no desplazar, también lo
+            # deshabilitamos.
+            # NOTA: En ocasiones puede ocurrir que si la tabla tiene muchos
+            # elementos y estamos muy abajo en la tabla, y pasamos a tener
+            # muy pocos elementos, de tal forma que no es necesario el
+            # desplazamiento, la tabla desaparece. Por ese motivo, hacemos el
+            # desplazar el canvas al origen, y de esa forma ya funciona (no se
+            # sabe la causa de esto).
+            # Sin embargo, sólo desplazamos si el cambio viene motivado por una
+            # reducción en el tamaño de la tabla, no porque el usuario haya
+            # solicitado deshabilitar el desplazamiento.
+            if self.__desp_vertical:
+                self.__canvas.yview("moveto", 0.0)
             # Deshabilitamos el desplazamiento con la rueda del ratón
             self.__canvas.unbind_all("<MouseWheel>")
             self.__canvas.unbind_all("<Button-4>")
@@ -474,27 +539,8 @@ class Tabla(object):
             # Mostramos la barra de desplazamiento
             self.__barra.grid(row=0, column=1, sticky="ns")
 
-    #  Definición de eventos relacionados con el desplazamiento vertical
-    # de la tabla cuando existen más filas de las que caben.
-
-    def __teclas_cursor(self, event=None):
-        # Desplazamiento con las teclas de cursor.
-        if event.keysym == "Up":
-            self.__canvas.yview_scroll(-1, "units")  # Mover hacia arriba
-        elif event.keysym == "Down":
-            self.__canvas.yview_scroll(1, "units")  # Mover hacia abajo
-
-    def __rueda_raton(self, event=None):
-        # Desplazamiento con el ratón.
-        if sys.platform == "Windows":  # Windows
-            self.__canvas.yview_scroll(-int(event.delta / 120), "units")
-        elif sys.platform == "Darwin":  # macOS
-            self.__canvas.yview_scroll(-int(event.delta), "units")
-        elif sys.platform == "linux" or sys.platform == "linux2":  # Linux
-            if event.num == 4:
-                self.__canvas.yview_scroll(-1, "units")  # Scroll up
-            elif event.num == 5:
-                self.__canvas.yview_scroll(1, "units")  # Scroll down
+################################################################################
+################################################################################
 
     def __color_celda(self, etiqueta, columna):
         """
@@ -523,3 +569,4 @@ class Tabla(object):
         return self.__ancho_tabla
 
     ancho_tabla = property(__get_ancho_tabla, None, None, None)
+    desp_vertical = property(None, __set_desp_vertical, None, None)
