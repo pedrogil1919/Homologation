@@ -89,13 +89,10 @@ def leer_cabecera():
 
 
 @captura_error
-def leer_partidos():
+def leer_ancho_pagina():
     raiz = archivo_xml.getroot()
-    elemento = raiz.find("partidos")
-    datos_partidos = {
-        "TIPO_ACCESO":     elemento.attrib["TIPO_ACCESO"],
-        "TIEMPO_CONEXION": elemento.attrib["TIEMPO_CONEXION"]}
-    return datos_partidos
+    elemento = raiz.find("pagina")
+    return int(elemento.attrib["ANCHO"])
 
 
 @captura_error

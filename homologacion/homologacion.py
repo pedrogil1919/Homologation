@@ -8,7 +8,7 @@ import sys
 import time
 import tkinter
 
-from leer_constantes import abrir_archivo_xml, leer_conexion
+from leer_constantes import abrir_archivo_xml, leer_conexion, leer_ancho_pagina
 from modelo.base_datos import Conexion
 from vista.tabla_equipos import TablaEquipos
 from vista.ventana_inicio import crear_ventana_inicio
@@ -113,9 +113,10 @@ tkinter.Label(barra_estado, text=conexion).pack(
 estadisticas = tkinter.Label(barra_estado, text=conexion.resumen_equipos())
 estadisticas.pack(side=tkinter.RIGHT, padx=10)
 
+ancho_pagina = leer_ancho_pagina()
 # Configuración del ajuste de tamaños.
 ventana_principal.columnconfigure(0, weight=1)
-ventana_principal.columnconfigure(1, weight=5, minsize=200)
+ventana_principal.columnconfigure(1, weight=5, minsize=ancho_pagina)
 # ventana_principal.columnconfigure(2, weight=0)
 ventana_principal.rowconfigure(1, weight=1)
 
@@ -124,7 +125,7 @@ tabla_equipos = TablaEquipos(tabla, conexion, puntos)
 
 # Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
 # equipos.
-ventana_principal.minsize(tabla_equipos.ancho+200, 300)
+ventana_principal.minsize(tabla_equipos.ancho+ancho_pagina, 300)
 
 # Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
 # depende del sistema operativo.
