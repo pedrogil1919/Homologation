@@ -192,14 +192,16 @@ class TablaEquipos(object):
             return
         # Creamos una nueva página para editar los puntos de la zona.
         try:
-            # Deshabilitamos las funciones de desplazamiento vertical de la
-            # tabla.
-            self.__tabla_equipos.desp_vertical = False
             self.__pagina_edicion = Pagina(
                 self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
         except BlockingIOError as e:
             tkinter.messagebox.showerror(
                 "Error edición equipo", e)
+        else:
+            # Deshabilitamos las funciones de desplazamiento vertical de la
+            # tabla, que se volverá a habilitar cuando la pagina anterior llame
+            # a la función desbloquear al finalizar.
+            self.__tabla_equipos.desp_vertical = False
 
     def refrescar_tabla(self):
         """
