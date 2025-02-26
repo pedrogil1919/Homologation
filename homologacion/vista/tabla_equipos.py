@@ -54,8 +54,8 @@ class TablaEquipos(object):
         self.__puntos = puntos
 
         # Creamos una cabecera para incluir los botones de cambio de pestaña.
-        pestañas = tkinter.Frame(marco)
-        pestañas.grid(row=0, column=0, sticky="nsew")
+        self.__pestañas = tkinter.Frame(marco)
+        self.__pestañas.grid(row=0, column=0, sticky="nsew")
         # Cremos otro marco donde insertar la tabla.
         tabla = tkinter.Frame(marco)
         tabla.grid(row=1, column=0, sticky="nsew")
@@ -69,25 +69,25 @@ class TablaEquipos(object):
         self.variable.set(1)
         # Sobre la cabecera añadimos botones para cambiar entre los distintos
         # estados del equipo.
-        tkinter.Radiobutton(pestañas, text="Todos",
+        tkinter.Radiobutton(self.__pestañas, text="Todos",
                             variable=self.variable, value=1,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
                             command=lambda: self.seleccionar_estado(
                                 estado.TODOS)).pack(side=tkinter.LEFT)
 
-        tkinter.Radiobutton(pestañas, text="Inscritos",
+        tkinter.Radiobutton(self.__pestañas, text="Inscritos",
                             variable=self.variable, value=2,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
                             command=lambda: self.seleccionar_estado(
                                 estado.INSCRITO)).pack(side=tkinter.LEFT)
 
-        tkinter.Radiobutton(pestañas, text="Registrados",
+        tkinter.Radiobutton(self.__pestañas, text="Registrados",
                             variable=self.variable, value=3,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
                             command=lambda: self.seleccionar_estado(
                                 estado.REGISTRADO)).pack(side=tkinter.LEFT)
 
-        tkinter.Radiobutton(pestañas, text="Homologados",
+        tkinter.Radiobutton(self.__pestañas, text="Homologados",
                             variable=self.variable, value=4,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
                             command=lambda: self.seleccionar_estado(
@@ -202,6 +202,7 @@ class TablaEquipos(object):
             # tabla, que se volverá a habilitar cuando la pagina anterior llame
             # a la función desbloquear al finalizar.
             self.__tabla_equipos.desp_vertical = False
+            self.__bloquear_pestañas()
 
     def refrescar_tabla(self):
         """
@@ -238,6 +239,12 @@ class TablaEquipos(object):
         self.__pagina_edicion = None
         # Habilitamos las funciones de desplazamiento vertical de la tabla.
         self.__tabla_equipos.desp_vertical = True
+        self.__bloquear_pestañas(False)
+
+    def __bloquear_pestañas(self, bloquear=True):
+        estado = tkinter.DISABLED if bloquear else tkinter.NORMAL
+        for boton in self.__pestañas.children.values():
+            boton.config(state=estado)
 
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla
