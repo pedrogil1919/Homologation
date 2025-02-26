@@ -57,13 +57,13 @@ class Pagina(object):
         # Construimos una cabecera para incluir el nombre del equipo.
         cabecera = "(%i) %s - Zona %s" % (self.__equipo, nombre, zona)
         tkinter.Label(self.__marco, text=cabecera, height=1).grid(
-            row=0, column=0, columnspan=2, sticky="nsew")
+            row=0, column=0, sticky="nsew")
         # Otro marco donde mostrar los puntos de homologación.
         marco_canvas = tkinter.Frame(self.__marco, bg="gray")
         marco_canvas.grid(row=1, column=0, sticky="nsew")
         # Y añadimos un marco con dos botones en la parte inferior de la página.
         botones = tkinter.Frame(self.__marco, bg="gray90")
-        botones.grid(row=2, column=0, columnspan=2, sticky="nsew")
+        botones.grid(row=2, column=0, sticky="nsew")
 
         b1 = tkinter.Button(botones, text="Cancelar", command=self.cancelar)
         b2 = tkinter.Button(botones, text="Guardar", command=self.guardar)

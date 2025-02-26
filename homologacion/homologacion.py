@@ -30,7 +30,7 @@ def cerrar_aplicacion(__=None):
         return
     # Preguntamos al usuario si quiere finalizar la aplicación.
     if not tkinter.messagebox.askokcancel(
-            "Finalizar", "¿Quiere cerrar la aplicación?"):
+            "Cerrar aplicación", "¿Quiere cerrar la aplicación?"):
         return
     ventana_principal.destroy()
 
@@ -113,12 +113,6 @@ tkinter.Label(barra_estado, text=conexion).pack(
 estadisticas = tkinter.Label(barra_estado, text=conexion.resumen_equipos())
 estadisticas.pack(side=tkinter.RIGHT, padx=10)
 
-ancho_pagina = leer_ancho_pagina()
-# Configuración del ajuste de tamaños.
-ventana_principal.columnconfigure(0, weight=1)
-ventana_principal.columnconfigure(1, weight=5, minsize=ancho_pagina)
-# ventana_principal.columnconfigure(2, weight=0)
-ventana_principal.rowconfigure(1, weight=1)
 
 # Crear objeto donde se colocará la tabla de equipos.
 tabla_equipos = TablaEquipos(tabla, conexion, puntos)
@@ -126,6 +120,11 @@ tabla_equipos = TablaEquipos(tabla, conexion, puntos)
 # Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
 # equipos.
 ventana_principal.minsize(tabla_equipos.ancho+ancho_pagina, 300)
+
+# Configuración del ajuste de tamaños.
+ventana_principal.columnconfigure(0, weight=1, minsize=tabla_equipos.ancho)
+ventana_principal.columnconfigure(1, weight=5, minsize=ancho_pagina)
+ventana_principal.rowconfigure(1, weight=1)
 
 # Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
 # depende del sistema operativo.
