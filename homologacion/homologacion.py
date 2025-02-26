@@ -94,7 +94,7 @@ ventana_principal = tkinter.Tk()
 
 # Creamos una cabecera para la aplicación.
 cabecera = tkinter.Frame(ventana_principal, bg="green", height=50)
-cabecera.grid(row=0, column=0, sticky="nsew", columnspan=2)
+cabecera.grid(row=0, column=0, sticky="nsew")
 
 # Creamos un marco donde colocar la tabla
 tabla = tkinter.Frame(ventana_principal, bg="yellow")
@@ -102,7 +102,7 @@ tabla.grid(row=1, column=0, sticky="nsew")
 
 # Creamos otro marco donde aparecerán los puntos a validar.
 puntos = tkinter.Frame(ventana_principal)
-puntos.grid(row=1, column=1, sticky="nsew")
+puntos.grid(row=0, column=1, sticky="nsew", rowspan=2)
 
 # Creamos un marco para mostrar la barra de estado.
 barra_estado = tkinter.Frame(ventana_principal)
