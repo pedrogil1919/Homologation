@@ -59,6 +59,9 @@ except Exception as error:
     tkinter.messagebox.showerror("Archivo de configuracion", error)
     exit(1)
 
+################################################################################
+# Realizar conexión con la base de datos y ventana de inicio
+################################################################################
 conexion = leer_conexion()
 tiempo_inicio = time.time()
 ventana_inicio, tiempo = crear_ventana_inicio()
@@ -83,13 +86,9 @@ while(time.time() - tiempo_inicio < tiempo):
 # Eliminamos la ventana para poder crear la ventana principal.
 ventana_inicio.destroy()
 
-# # Abrir conexión.
-# bd = base_datos.Conexion(
-#     "homologador",
-#     "homologador",
-#     "localhost",
-#     "eurobot_current")
-
+################################################################################
+# Crear diseño de la ventana principal
+################################################################################
 # Ventana principal
 ventana_principal = tkinter.Tk()
 
@@ -108,19 +107,27 @@ puntos.grid(row=1, column=1, sticky="nsew")
 # Creamos un marco para mostrar la barra de estado.
 barra_estado = tkinter.Frame(ventana_principal)
 barra_estado.grid(row=2, column=0, columnspan=2, sticky="ews")
+# Y las etiquetas dentro de la barra de estado para mostrar la información.
 tkinter.Label(barra_estado, text=conexion).pack(
     side=tkinter.LEFT, padx=10)
 estadisticas = tkinter.Label(barra_estado, text=conexion.resumen_equipos())
 estadisticas.pack(side=tkinter.RIGHT, padx=10)
 
-
+################################################################################
+# Crear tabla y página de edición de puntos.
+################################################################################
 # Crear objeto donde se colocará la tabla de equipos.
 tabla_equipos = TablaEquipos(tabla, conexion, puntos)
+
+ancho_pagina = leer_ancho_pagina()
 
 # Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
 # equipos.
 ventana_principal.minsize(tabla_equipos.ancho+ancho_pagina, 300)
 
+################################################################################
+# Configuración del grid de la ventana principal.
+################################################################################
 # Configuración del ajuste de tamaños.
 ventana_principal.columnconfigure(0, weight=1, minsize=tabla_equipos.ancho)
 ventana_principal.columnconfigure(1, weight=5, minsize=ancho_pagina)
