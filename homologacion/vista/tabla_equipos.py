@@ -107,9 +107,6 @@ class TablaEquipos(object):
             configuracion["alineacion"],
             50, 45, FUENTE_CABECERA, FUENTE_DATOS)
 
-        # Inicialmente arrancamos la aplicación mostrando todos los equipos.
-        self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
-
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre qué columnas se deben ejecutar los eventos
         # de edición de puntos, y sobre que columnas los de cambio de registro.
@@ -131,6 +128,10 @@ class TablaEquipos(object):
                 self.__tabla_equipos.definir_color_columna(
                     columna, "white",
                     lambda valor: "green" if int(valor) == 0 else "red")
+
+        # Inicialmente arrancamos la aplicación mostrando todos los equipos.
+        # La llamada a esta función rellena por primera vez la tabla con datos.
+        self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
 
         # Guardamos en esta variable la referencia a la página que estamos
         # editando. Si es None, significa que estamos no estamos editando nada,
