@@ -217,13 +217,19 @@ class Tabla(object):
 
 ################################################################################
 ################################################################################
-    def refrescar(self, datos):
+    def refrescar(self, datos, solo_actualizar=False):
         """
         Actualizar los datos de la tabla. La función debe recibir los datos
         en un formato similar al descrito en la función formatear_lista_tabla.
         La función determina qué filas han desaparecido y qué filas aparecen
         para eliminarlas / añadirlas. Para el resto de filas, actualiza los
         valores de las etiquetas.
+        
+        La variable solo_actualizar indica que sólo hay que actualizar las
+        filas pasadas como datos, no hay que eliminar o añadir nuevas fila.
+        Esta opción es necesaria si queremos actualizar sólo unas filas sin
+        necesidad de estar mandando el resto de filas que no deben ser
+        refrescadas.
 
         """
         # Guardamos el total de filas que tenemos antes de añadir o eliminar
@@ -234,20 +240,22 @@ class Tabla(object):
         # diccionarios en sets.
         s1 = set(self.__controles.keys())
         s2 = set(datos.keys())
-        # Filas añadidas.
-        añadir = s2 - s1
-        # Filas eliminadas.
-        borrar = s1 - s2
+
+        if not solo_actualizar:
+            # Filas añadidas.
+            añadir = s2 - s1
+            # Filas eliminadas.
+            borrar = s1 - s2
+            # Borramos las filas que desaparecen:
+            for f in borrar:
+                self.borrar_fila(f)
+
+            # Añadimos las nuevas filas:
+            for f in añadir:
+                self.añadir_fila(f, datos[f])
+
         # Resto de filas.
         actualizar = s1 & s2
-        # Borramos las filas que desaparecen:
-        for f in borrar:
-            self.borrar_fila(f)
-
-        # Añadimos las nuevas filas:
-        for f in añadir:
-            self.añadir_fila(f, datos[f])
-
         # Actualizamos el resto de filas.
         for f in actualizar:
             self.refrescar_fila(f, datos[f])

@@ -204,17 +204,34 @@ class TablaEquipos(object):
             self.__tabla_equipos.desp_vertical = False
             self.__bloquear_pestañas()
 
-    def refrescar_tabla(self):
+    def refrescar_tabla(self, equipo=None):
         """
         Refresca los datos de la tabla.
 
+        Si equipo es None, se refresca la tabla entera. Si no es None sólo se
+        refresca el equipo indicado.
+
         """
         # Obtenemos los datos para la tabla,
-        lista = self.__conexion.lista_equipos(self.__estado_tabla)
-        # los formatemaos
+        lista = self.__conexion.lista_equipos(self.__estado_tabla, equipo)
+        # NOTA: Si equipo no es None, es decir, requerimos la información de
+        # un equipo, pero la base de datos no nos devuelve ningún registro,
+        # significa que éste ha cambiado de estado y no supera el filtro de la
+        # tabla actual. En ese caso, lo que hacemos es refrescar toda la tabla,
+        # y ponemos equipo a None para que entre en el código correcto del if.
+        if len(lista) == 0:
+            lista = self.__conexion.lista_equipos(self.__estado_tabla)
+            equipo = None
+        # Formateamos los datos.
         lista = Tabla.formatear_lista_tabla(lista)
         # y los mostramos en la tabla.
-        self.__tabla_equipos.refrescar(lista)
+        if equipo is None:
+            # Si hay que refrescar toda la tabla, hacemos la llamada normal.
+            self.__tabla_equipos.refrescar(lista)
+        else:
+            # y si sólo es refrescar los datos del equipo en cuestión, ponemos
+            # el indicador a True.
+            self.__tabla_equipos.refrescar(lista, True)
 
     def seleccionar_estado(self, es):
         """
@@ -233,7 +250,7 @@ class TablaEquipos(object):
         """
         # Cada vez que cerramos una página, refrescamos la tabla, ya que es
         # posible que el equipo haya cambiado de estado.
-        self.refrescar_tabla()
+        self.refrescar_tabla(self.__pagina_edicion.equipo)
         # Y ponemos su estado en modo lectura, hasta que abramos una nueva
         # página.
         self.__pagina_edicion = None

@@ -66,11 +66,12 @@ class Conexion():
 ################################################################################
 ################################################################################
 ################################################################################
-    def lista_equipos(self, estado):
+    def lista_equipos(self, estado, equipo=None):
         """
-        Obtiene la lista de equipos filtrados por el valor de estado
-
-        Ver definición del tipo enumerado "estado"
+        Obtiene la lista de equipos filtrados por el valor de estado (ver
+        definición del tipo enumerado "estado"). Si equipo se corresponde con el
+        ID de un equipo, sólo obtiene los datos de este equipo (que puede ser
+        null si el equipo no cumple las condiciones del estado.
 
         """
         cursor = self.__conexion.cursor(dictionary=False, prepared=False)
@@ -78,6 +79,8 @@ class Conexion():
         filtro_homologado = ESTADO[estado][1]
         consulta = "SELECT * FROM ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
             format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
+        if equipo is not None:
+            consulta += " AND ID_EQUIPO = %i" % equipo
         cursor.execute(consulta)
         equipos = cursor.fetchall()
         return equipos

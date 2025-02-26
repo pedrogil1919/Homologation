@@ -208,3 +208,8 @@ class Pagina(object):
         # Comprobamos si debemos habilitar o no las funciones de desplazamiento
         # vetical de la página.
         self.__vertical.desp_vertical = True
+
+    def get_equipo(self):
+        return self.__equipo
+
+    equipo = property(get_equipo, None, None, None)
