@@ -85,6 +85,23 @@ class Conexion():
         equipos = cursor.fetchall()
         return equipos
 
+    def lista_estado_equipos(self, equipo=None):
+        """
+        Devuelve el estado de cada uno de los equipos. El valor devuelto es:
+
+        - I: Equipo inscrito pero no registrado todavía.
+        - R: Equipo registrado pero no homologado todavía.
+        - H: Equipo registrado y homologado.
+        
+        """
+        cursor = self.__conexion.cursor(dictionary=True, prepared=False)
+        consulta = "SELECT * FROM ListaEstadosEquipos"
+        if equipo is not None:
+            consulta += " WHERE ID_EQUIPO = %i" % equipo
+        cursor.execute(consulta)
+        equipos = cursor.fetchall()
+        return equipos
+
     def registrar_equipo(self, fila):
         """
         Alterna el estado de registro de un equipo

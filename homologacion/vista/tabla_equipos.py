@@ -107,6 +107,13 @@ class TablaEquipos(object):
             configuracion["alineacion"],
             50, 45, FUENTE_CABECERA, FUENTE_DATOS)
 
+        def color_zona(fila, columna, valor):
+            " Función para definir el color de las zonas de hommologación."
+            try:
+                return "green" if int(valor) == 0 else "red"
+            except ValueError:
+                return "white"
+
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre qué columnas se deben ejecutar los eventos
         # de edición de puntos, y sobre que columnas los de cambio de registro.
@@ -117,6 +124,10 @@ class TablaEquipos(object):
                 # El código 0 se refiere a cambio de registro.
                 self.__tabla_equipos.añadir_evento(
                     "<Double-1>", columna, self.registrar)
+                # Asignamos la funcion que determina el color de la celda
+                # del nombre del equipo.
+                self.__tabla_equipos.definir_color_columna(
+                    columna, "white", self.__color_equipo)
             else:
                 # El resto de códigos se refieren al número de zona que debe
                 # editar dicho evento.
@@ -126,8 +137,7 @@ class TablaEquipos(object):
                 # Asignamos también las funciones para calcular el color de
                 # la celda en función del valor de ésta.
                 self.__tabla_equipos.definir_color_columna(
-                    columna, "white",
-                    lambda valor: "green" if int(valor) == 0 else "red")
+                    columna, "white", color_zona)
 
         # Inicialmente arrancamos la aplicación mostrando todos los equipos.
         # La llamada a esta función rellena por primera vez la tabla con datos.
@@ -137,6 +147,10 @@ class TablaEquipos(object):
         # editando. Si es None, significa que estamos no estamos editando nada,
         # es decir, estamos en modo Lectura.
         self.__pagina_edicion = None
+        # Variable temporal empleada por la función que determinar el color
+        # de la columna con el nombre del equipo (ver función refrescar_tabla
+        # y __color_equipo).
+        self.__temp_estado = None
 
     def registrar(self, fila, evento=None):
         """
@@ -150,18 +164,18 @@ class TablaEquipos(object):
                 "antes de editar otro equipo.")
             return
         # Obtenemos el nombre del equipo para mostrarselo al usuario.
-        nombre = self.__conexion.datos_equipo(fila)
+        equipo, nombre = self.__conexion.datos_equipo(fila)
         # Antes de cambiar de estado, preguntamos al usuario.
         if tkinter.messagebox.askokcancel(
                 "Registrar equipo",
                 "Cambiar el estado de registro del equipo %s (%s)" %
-                (nombre[1], nombre[0])):
+                (nombre, equipo)):
             try:
                 self.__conexion.registrar_equipo(fila)
             except BlockingIOError as e:
                 tkinter.messagebox.showerror(
                     "Error edición equipo", e)
-            self.refrescar_tabla()
+            self.refrescar_tabla(equipo)
 
     # Funciones de atención a los eventos de edición de zona de homologación.
     # Se implementa como un decorator, de tal forma que con una única función
@@ -223,9 +237,18 @@ class TablaEquipos(object):
         if len(lista) == 0:
             lista = self.__conexion.lista_equipos(self.__estado_tabla)
             equipo = None
-        # Formateamos los datos.
+        # Formateamos los datos para mostrarlos en la tabla.
         lista = Tabla.formatear_lista_tabla(lista)
-        # y los mostramos en la tabla.
+        # Obtenemos el estado de cada equipo, para que la función de determinar
+        # el color de la celda funcione correctamente.
+        lista_estados = self.__conexion.lista_estado_equipos(equipo)
+        # Para ello generamos una variable temporal que será accedida por la
+        # función de cálculo del color de la celda con el nombre del equipo.
+        self.__temp_estado = {}
+        for estado in lista_estados:
+            self.__temp_estado[estado["ORDEN"]] = estado
+        # Determinamos si es necesario refrescar toda la tabla, o sólo la
+        # información del equipo actual.
         if equipo is None:
             # Si hay que refrescar toda la tabla, hacemos la llamada normal.
             self.__tabla_equipos.refrescar(lista)
@@ -233,6 +256,9 @@ class TablaEquipos(object):
             # y si sólo es refrescar los datos del equipo en cuestión, ponemos
             # el indicador a True.
             self.__tabla_equipos.refrescar(lista, True)
+        # En este punto ya no es necesario ela variable temporal, por lo que
+        # podemos eliminarla.
+        self.__temp_estado = None
 
     def seleccionar_estado(self, es):
         """
@@ -263,6 +289,26 @@ class TablaEquipos(object):
         estado = tkinter.DISABLED if bloquear else tkinter.NORMAL
         for boton in self.__pestañas.children.values():
             boton.config(state=estado)
+
+    def __color_equipo(self, fila, columna, valor):
+        """
+        Obtener el color de la etiqueta correspondiente a la columna con el
+        nombre del equipo.
+
+        """
+        # La función necesita la variable __temp_estado, por lo que es
+        # necesario asegurarse que esta variable existe antes de poder
+        # utilizarla.
+        datos_equipo = self.__temp_estado[fila]
+        estado_equipo = datos_equipo["estado"]
+        if estado_equipo == "I":
+            return "white"
+        elif estado_equipo == "R":
+            return "red"
+        elif estado_equipo == "H":
+            return "green"
+        else:
+            raise ValueError("Vista ListaEstadosEquipos incorrecta")
 
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla

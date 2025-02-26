@@ -224,7 +224,7 @@ class Tabla(object):
         La función determina qué filas han desaparecido y qué filas aparecen
         para eliminarlas / añadirlas. Para el resto de filas, actualiza los
         valores de las etiquetas.
-        
+
         La variable solo_actualizar indica que sólo hay que actualizar las
         filas pasadas como datos, no hay que eliminar o añadir nuevas fila.
         Esta opción es necesaria si queremos actualizar sólo unas filas sin
@@ -283,36 +283,36 @@ class Tabla(object):
         # para representar la fila.
         fila_celdas = {}
         fila_marcos = {}
-        for col, dato in enumerate(valores):
-            if self.__ancho[col] == 0:
+        for columna, dato in enumerate(valores):
+            if self.__ancho[columna] == 0:
                 # Si el ancho es 0, nos indican que no debemos añadir esta
                 # columna
                 continue
             # Creamos el marco que contendrá la etiqueta.
             marco_celda = tkinter.Frame(self.__marco_tabla,
-                                        width=self.__ancho[col],
+                                        width=self.__ancho[columna],
                                         height=self.__alto_datos)
             marco_celda.grid(
-                row=fila, column=col, sticky="nsew", padx=1, pady=1)
+                row=fila, column=columna, sticky="nsew", padx=1, pady=1)
             marco_celda.pack_propagate(False)
             # Y creamos la etiqueta dentro del marco anterior.
             etiqueta_celda = tkinter.Label(
                 marco_celda, fg=TEXTO_DATOS,
                 text=dato, font=self.__fuente_datos,
-                anchor=ANCHOR[self.__alineacion[col]], padx=10)
+                anchor=ANCHOR[self.__alineacion[columna]], padx=10)
             # Asighamos el color de la celda en función de la configuración
-            self.__color_celda(etiqueta_celda, col)
+            self.__color_celda(fila, columna, etiqueta_celda)
             etiqueta_celda.pack(fill=tkinter.BOTH, expand=True)
             # comprobamos si hay que añadir también eventos a la etiqueta.
-            for ev in self.__eventos.get(col, []):
+            for ev in self.__eventos.get(columna, []):
                 # En este caso, el primer elemento incluye el nombre del
                 # evento, y el segundo el noombre de la función.
                 evento = ev[0]
                 funcion = ev[1]
                 etiqueta_celda.bind(evento, partial(funcion, fila))
 
-            fila_celdas[col] = etiqueta_celda
-            fila_marcos[col] = marco_celda
+            fila_celdas[columna] = etiqueta_celda
+            fila_marcos[columna] = marco_celda
         # Actualizamos la lista de controles añadidos.
         self.__controles[fila] = {"L": fila_celdas, "F": fila_marcos}
 
@@ -351,7 +351,7 @@ class Tabla(object):
             # Asignamos el texto de la celda.
             etiqueta.config(text=valores[columna])
             # y su color, en fucnión del valor.
-            self.__color_celda(etiqueta, columna)
+            self.__color_celda(fila, columna, etiqueta)
 
 ################################################################################
 ################################################################################
@@ -525,7 +525,7 @@ class Tabla(object):
 ################################################################################
 ################################################################################
 
-    def __color_celda(self, etiqueta, columna):
+    def __color_celda(self, fila, columna, etiqueta):
         """
         Asigna el color para la celda correspondiente
 
@@ -542,7 +542,7 @@ class Tabla(object):
             # Comprobamos si tenemos una función para calcular el color de
             # la celda
             try:
-                color = funcion(etiqueta["text"])
+                color = funcion(fila, columna, etiqueta["text"])
             except ValueError:
                 color = color_defecto
 
