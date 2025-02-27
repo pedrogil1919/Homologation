@@ -19,7 +19,7 @@
         <logos DIRECTORIO="" CABECERA="eurobotSpain.png" FONDO="alcabot.png"/>
     </graficos>
     <fuente_cabecera FAMILIA="LIBERATION SANS" TAMAÑO="20" ESTILO="bold" COLOR="gray10"/> 
-    <fuente_filas FAMILIA="LIBERATION SANS" TAMAÑO="12" ESTILO="" COLOR="gray20"/> 
+    <fuente_filas FAMILIA="LIBERATION SANS" TAMAÑO="12" ESTILO="" COLOR="red"/> 
     <fuente FAMILIA="LIBERATION SANS" TAMAÑO="10" ESTILO=""/> 
 	
 	<!--

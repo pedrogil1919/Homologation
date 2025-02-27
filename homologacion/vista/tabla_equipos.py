@@ -40,7 +40,7 @@ class TablaEquipos(object):
 
     '''
 
-    def __init__(self, marco, conexion, puntos):
+    def __init__(self, marco, conexion, puntos, fondo):
         '''
         Constructor
 
@@ -48,12 +48,15 @@ class TablaEquipos(object):
         - marco: marco de tkinter donde se construirá toda la interfaz gráfica
         - conexion.
         - puntos: marco auxiliar donde se mostrarán los puntos de homologacion.
+        - etiqueta_fondo: etiqueta con el fondo a mostrar en el area de puntos
+          cuando no se está visualizando los puntos de homologación.
 
         '''
         # Guardamos la conexión a la base de datos.
         self.__conexion = conexion
         # Guardamos el marco donde se mostrarán los puntos de homologación.
         self.__puntos = puntos
+        self.__fondo = fondo
 
         # Creamos una cabecera para incluir los botones de cambio de pestaña.
         self.__pestañas = tkinter.Frame(marco)
@@ -74,33 +77,33 @@ class TablaEquipos(object):
         tkinter.Radiobutton(self.__pestañas, text="Todos",
                             variable=self.variable, value=1,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
-                            command=lambda: self.seleccionar_estado(
+                            command=lambda: self.__seleccionar_estado(
                                 estado.TODOS)).pack(side=tkinter.LEFT)
 
         tkinter.Radiobutton(self.__pestañas, text="Inscritos",
                             variable=self.variable, value=2,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
-                            command=lambda: self.seleccionar_estado(
+                            command=lambda: self.__seleccionar_estado(
                                 estado.INSCRITO)).pack(side=tkinter.LEFT)
 
         tkinter.Radiobutton(self.__pestañas, text="Registrados",
                             variable=self.variable, value=3,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
-                            command=lambda: self.seleccionar_estado(
+                            command=lambda: self.__seleccionar_estado(
                                 estado.REGISTRADO)).pack(side=tkinter.LEFT)
 
         tkinter.Radiobutton(self.__pestañas, text="Homologados",
                             variable=self.variable, value=4,
                             indicatoron=0, width=10, height=1, padx=10, pady=10,
-                            command=lambda: self.seleccionar_estado(
+                            command=lambda: self.__seleccionar_estado(
                                 estado.HOMOLOGADO)).pack(side=tkinter.LEFT)
 
+        # Obtenemos los datos de configuración de toda la interfaz.
         colores_tabla = leer_colores_tabla()
-
         fuente_cabecera, color_fuente_cabecera = leer_fuente_cabecera()
         self.__fuente_filas, self.__color_fuente_filas = leer_fuente_filas()
-        # Obtenemos los datos de configuración de la cabecera desde la
-        # base de datos.
+        # Obtenemos los datos de configuración de la tabla desde la
+        # base de datos y el archivo xml.
         cabecera = leer_cabecera()
         columnas = self.__conexion.columnas()
         configuracion = self.__configuracion_columnas(columnas, cabecera)
@@ -157,7 +160,7 @@ class TablaEquipos(object):
         self.__colores = leer_colores_puntos()
         # Inicialmente arrancamos la aplicación mostrando todos los equipos.
         # La llamada a esta función rellena por primera vez la tabla con datos.
-        self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
+        self.__estado_tabla = self.__seleccionar_estado(estado.TODOS)
 
         # Guardamos en esta variable la referencia a la página que estamos
         # editando. Si es None, significa que estamos no estamos editando nada,
@@ -167,6 +170,9 @@ class TablaEquipos(object):
         # de la columna con el nombre del equipo (ver función refrescar_tabla
         # y __color_equipo).
         self.__temp_estado = None
+        # Guardamos el fondo que debemos mostrar cuando no hay ningún equipo
+        # editando.
+        self.__mostrar_area()
 
     def registrar(self, fila, evento=None):
         """
@@ -229,10 +235,10 @@ class TablaEquipos(object):
         try:
             # Fijamos el mismo color del borde de la tabla en la página.
             colores_tabla = leer_colores_tabla()
-
             self.__pagina_edicion = Pagina(
                 self.__puntos, self.__conexion, fila, zona,
                 self.__desbloquear, color_punto, colores_tabla["BORDE"])
+            self.__mostrar_area()
 
         except BlockingIOError as e:
             tkinter.messagebox.showerror(
@@ -285,7 +291,7 @@ class TablaEquipos(object):
         # podemos eliminarla.
         self.__temp_estado = None
 
-    def seleccionar_estado(self, es):
+    def __seleccionar_estado(self, es):
         """
         Permite cambiar el estado (filtro) de la tabla de equipos.
 
@@ -306,6 +312,7 @@ class TablaEquipos(object):
         # Y ponemos su estado en modo lectura, hasta que abramos una nueva
         # página.
         self.__pagina_edicion = None
+        self.__mostrar_area()
         # Habilitamos las funciones de desplazamiento vertical de la tabla.
         self.__tabla_equipos.desp_vertical = True
         self.__bloquear_pestañas(False)
@@ -392,6 +399,14 @@ class TablaEquipos(object):
             "alineacion": alineacion,
             "ajuste": ajuste,
             "eventos": eventos}
+
+    def __mostrar_area(self):
+        if self.edicion:
+            self.__fondo.pack_forget()
+            self.__puntos.pack(expand=True, fill=tkinter.BOTH)
+        else:
+            self.__puntos.pack_forget()
+            self.__fondo.pack(expand=True, fill=tkinter.BOTH)
 
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla

@@ -94,26 +94,35 @@ ventana_inicio.destroy()
 # Ventana principal
 ventana_principal = tkinter.Tk()
 
-imagenes = leer_logos()
 # Creamos una cabecera para la aplicación.
 cabecera = tkinter.Frame(ventana_principal)
 cabecera.grid(row=0, column=0, sticky="nsew")
-imagen = PhotoImage(file=imagenes["CABECERA"])
 
 # Agregar imagen dentro del Frame usando Label
-tkinter.Label(cabecera, image=imagen).pack(padx=10, pady=10)
+imagenes = leer_logos()
+imagen_cabecera = PhotoImage(file=imagenes["CABECERA"])
+tkinter.Label(cabecera, image=imagen_cabecera).pack(padx=10, pady=10)
 
 # Creamos un marco donde colocar la tabla
 tabla = tkinter.Frame(ventana_principal, bg="yellow")
 tabla.grid(row=1, column=0, sticky="nsew")
 
 # Creamos otro marco donde aparecerán los puntos a validar.
-puntos = tkinter.Frame(ventana_principal)
-puntos.grid(row=0, column=1, sticky="nsew", rowspan=2)
+area = tkinter.Frame(ventana_principal)
+area.grid(row=0, column=1, sticky="nsew", rowspan=2)
+
+puntos = tkinter.Frame(area)
+fondo = tkinter.Frame(area)
+area.columnconfigure(0, weight=1)
+area.rowconfigure(0, weight=1)
+imagen_logo = PhotoImage(file=imagenes["LOGO"])
+tkinter.Label(fondo, borderwidth=0, image=imagen_logo).pack(expand=True)
+
 
 # Creamos un marco para mostrar la barra de estado.
 barra_estado = tkinter.Frame(ventana_principal)
 barra_estado.grid(row=2, column=0, columnspan=2, sticky="ews")
+
 # Y las etiquetas dentro de la barra de estado para mostrar la información.
 tkinter.Label(barra_estado, text=conexion).pack(
     side=tkinter.LEFT, padx=10)
@@ -124,7 +133,7 @@ estadisticas.pack(side=tkinter.RIGHT, padx=10)
 # Crear tabla y página de edición de puntos.
 ################################################################################
 # Crear objeto donde se colocará la tabla de equipos.
-tabla_equipos = TablaEquipos(tabla, conexion, puntos)
+tabla_equipos = TablaEquipos(tabla, conexion, puntos, fondo)
 
 ancho_pagina = leer_ancho_pagina()
 
