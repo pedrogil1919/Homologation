@@ -36,6 +36,8 @@ from functools import partial
 import tkinter
 
 from modelo.desplazamiento_tabla import Desplazamiento
+
+
 # Definición de colores
 BORDE = "black"
 FONDO_CABECERA = "LightBlue1"
@@ -54,9 +56,15 @@ ANCHOR = {
 
 class Tabla(object):
 
-    def __init__(self, marco, cabecera, ancho, ajuste, alineacion,
-                 alto_cabecera, alto_datos,
-                 fuente_cabecera=None, fuente_datos=None):
+    def __init__(self, marco, cabecera,
+                 ancho=(100,),
+                 ajuste=("C",),
+                 alineacion=(0,),
+                 alto_cabecera=20,
+                 alto_datos=20,
+                 colores="white",
+                 fuente_cabecera=("LIBERATION SANS", 12, ""),
+                 fuente_datos=("LIBERATION SANS", 12, "")):
         """
         Construcción de la tabla, y configuración.
 
@@ -75,6 +83,9 @@ class Tabla(object):
         - alineacion: alineación del texto para cada columna (L, C, R).
         - alto_cabecera, en pixeles
         - alto_datos, en píxeles
+        - colores: diccionario con la información de los colores para cada una
+          de las partes de la tabla: las claves a incluir son:
+          - 
         - fuente_cabecera (familia, tamaño, atributos)
         - fuente_datos (familia, tamaño, atributos)
 
@@ -83,15 +94,17 @@ class Tabla(object):
         lanza una excepción de tipo ValueError.
 
         """
-        # Guardamos los datos de configuración de la tabla.
+        # ancho, ajuste, alineacion,
+        # alto_cabecera, alto_datos,
+
+        # Guardamos los datos de configuración de la tabla que sean necesarios
+        # fuera del constructor.
         # Ancho de las columnas.
         self.__ancho = ancho
-        # Guardamos la altura de las filas.
+        # Altura de las filas de los datos
         self.__alto_datos = alto_datos
-        # self.__alto_cabecera = alto_cabecera
         # Y las fuentes para los textos.
         self.__fuente_datos = fuente_datos
-        # self.__fuente_cabecera = fuente_cabecera
         # Guardamos la forma de alinear el texto de las etiquetas.
         self.__alineacion = alineacion
         # Comprobamos que todos los argumentos tengan el mismo número de
@@ -430,65 +443,6 @@ class Tabla(object):
             # Añadimos la nueva fila a la lista formateada.
             filas[orden] = dato[1:]
         return filas
-
-    @staticmethod
-    def configuracion_columnas(columnas, configuracion):
-        """
-        Devuelve las listas de configuración de columnas.
-
-        Argumentos:
-        - columnas: lista de columnas de la vista que queremos configurar,
-          obtenida con el comando SQL "SHOW COLUMNS FROM NombreVista"
-        - configuracion: dicionario, donde cada
-
-        """
-        # Creamos las listas para cada uno de los parámetros de configuración.
-        nombre = []
-        ancho = []
-        alineacion = []
-        ajuste = []
-        eventos = []
-        # Para cada columna de la vista,
-        for campo in columnas:
-            try:
-                # Comprobamos que el nombre de la columna exista en la lista de
-                # configuración.
-                valor = configuracion[campo["Field"]]
-                # Comprobamos que la columna tenga el campo nombre.
-                try:
-                    valor["NOMBRE"]
-                except KeyError:
-                    # En caso contrario, significa que esta columna no hay que
-                    # añadirla.
-                    continue
-            except KeyError:
-                # Si no existe en la lista de configuración, significa que esta
-                # columna no hay que mostrarla. Eso se indica poniendo a 0 en
-                # campo ancho. El resto da igual
-                nombre += [""]
-                ancho += [0]
-                alineacion += ["N"]
-                ajuste += [0]
-                eventos += [None]
-            else:
-                # Si el campo existe, copiamos todos los datos de configuración
-                # de la columna.
-                nombre += [valor["NOMBRE"]]
-                ancho += [int(valor["ANCHO"])]
-                alineacion += [valor["ALINEACION"]]
-                ajuste += [int(valor["AJUSTE"])]
-                try:
-                    zona = int(valor["ZONA"])
-                except ValueError:
-                    zona = None
-                eventos += [zona]
-
-        return {
-            "nombre": nombre,
-            "ancho": ancho,
-            "alineacion": alineacion,
-            "ajuste": ajuste,
-            "eventos": eventos}
 
 
 ################################################################################

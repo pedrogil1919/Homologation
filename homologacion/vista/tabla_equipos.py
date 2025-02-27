@@ -97,15 +97,16 @@ class TablaEquipos(object):
         # base de datos.
         cabecera = leer_cabecera()
         columnas = self.__conexion.columnas()
-        configuracion = Tabla.configuracion_columnas(columnas, cabecera)
+        configuracion = self.__configuracion_columnas(columnas, cabecera)
         # Creamos la tabla, junto con su formato.
         self.__tabla_equipos = Tabla(
             tabla,
-            configuracion["nombre"],
-            configuracion["ancho"],
-            configuracion["ajuste"],
-            configuracion["alineacion"],
-            50, 45, FUENTE_CABECERA, FUENTE_DATOS)
+            cabecera=configuracion["nombre"],
+            ancho=configuracion["ancho"],
+            ajuste=configuracion["ajuste"],
+            alineacion=configuracion["alineacion"],
+            alto_cabecera=50,
+            alto_datos=45)
 
         def color_zona(fila, columna, valor):
             " Función para definir el color de las zonas de hommologación."
@@ -309,6 +310,64 @@ class TablaEquipos(object):
             return "green"
         else:
             raise ValueError("Vista ListaEstadosEquipos incorrecta")
+
+    @staticmethod
+    def __configuracion_columnas(columnas, configuracion):
+        """
+        Devuelve las listas de configuración de columnas.
+
+        Argumentos:
+        - columnas: lista de columnas de la vista que queremos configurar,
+          obtenida con el comando SQL "SHOW COLUMNS FROM NombreVista"
+        - configuracion: dicionario, donde cada
+
+        """
+        # Creamos las listas para cada uno de los parámetros de configuración.
+        nombre = []
+        ancho = []
+        alineacion = []
+        ajuste = []
+        eventos = []
+        # Para cada columna de la vista,
+        for campo in columnas:
+            try:
+                # Comprobamos que el nombre de la columna exista en la lista de
+                # configuración.
+                valor = configuracion[campo["Field"]]
+                # Comprobamos que la columna tenga el campo nombre.
+                try:
+                    nombre += [valor["NOMBRE"]]
+                except KeyError:
+                    continue
+            except KeyError:
+                # En caso contrario, significa que esta columna no hay que
+                # añadirla.
+                # Si no existe en la lista de configuración, significa que esta
+                # columna no hay que mostrarla. Eso se indica poniendo a 0 en
+                # campo ancho. El resto da igual
+                nombre += [""]
+                ancho += [0]
+                alineacion += ["N"]
+                ajuste += [0]
+                eventos += [None]
+            else:
+                # Si el campo existe, copiamos todos los datos de configuración
+                # de la columna.
+                ancho += [int(valor["ANCHO"])]
+                alineacion += [valor["ALINEACION"]]
+                ajuste += [int(valor["AJUSTE"])]
+                try:
+                    zona = int(valor["ZONA"])
+                except ValueError:
+                    zona = None
+                eventos += [zona]
+
+        return {
+            "nombre": nombre,
+            "ancho": ancho,
+            "alineacion": alineacion,
+            "ajuste": ajuste,
+            "eventos": eventos}
 
     def get_ancho(self):
         return self.__tabla_equipos.ancho_tabla
