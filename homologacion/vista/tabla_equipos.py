@@ -24,6 +24,8 @@ El objeto puede tener dos estados:
 import tkinter.messagebox
 
 from leer_constantes import leer_cabecera
+from leer_constantes import leer_colores_tabla, leer_colores_puntos
+from leer_constantes import leer_fuente_cabecera, leer_fuente_filas
 from modelo.base_datos import estado
 from modelo.pagina_edicion import Pagina
 from modelo.tabla import Tabla
@@ -93,6 +95,10 @@ class TablaEquipos(object):
                             command=lambda: self.seleccionar_estado(
                                 estado.HOMOLOGADO)).pack(side=tkinter.LEFT)
 
+        colores_tabla = leer_colores_tabla()
+
+        fuente_cabecera, color_fuente_cabecera = leer_fuente_cabecera()
+        self.__fuente_filas, self.__color_fuente_filas = leer_fuente_filas()
         # Obtenemos los datos de configuración de la cabecera desde la
         # base de datos.
         cabecera = leer_cabecera()
@@ -106,14 +112,22 @@ class TablaEquipos(object):
             ajuste=configuracion["ajuste"],
             alineacion=configuracion["alineacion"],
             alto_cabecera=50,
-            alto_datos=45)
+            alto_datos=45,
+            color_borde=colores_tabla["BORDE"],
+            color_fondo=colores_tabla["FONDO"],
+            color_cabecera=colores_tabla["CABECERA"],
+            color_filas=colores_tabla["FILAS"],
+            fuente_cabecera=fuente_cabecera,
+            color_fuente_cabecera=color_fuente_cabecera,
+            fuente_filas=self.__fuente_filas,
+            color_fuente_filas=self.__color_fuente_filas)
 
         def color_zona(fila, columna, valor):
             " Función para definir el color de las zonas de hommologación."
             try:
-                return "green" if int(valor) == 0 else "red"
+                return self.__colores["COLOR_SI"] if int(valor) == 0 else self.__colores["COLOR_NO"]
             except ValueError:
-                return "white"
+                return self.__colores["COLOR_NP"]
 
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre qué columnas se deben ejecutar los eventos
@@ -134,12 +148,13 @@ class TablaEquipos(object):
                 # editar dicho evento.
                 self.__tabla_equipos.añadir_evento(
                     "<Double-1>", columna,
-                    self.editar_zona(evento)(self.editar_zona_aux))
+                    self.__editar_zona(evento)(self.__editar_zona_aux))
                 # Asignamos también las funciones para calcular el color de
                 # la celda en función del valor de ésta.
                 self.__tabla_equipos.definir_color_columna(
                     columna, "white", color_zona)
 
+        self.__colores = leer_colores_puntos()
         # Inicialmente arrancamos la aplicación mostrando todos los equipos.
         # La llamada a esta función rellena por primera vez la tabla con datos.
         self.__estado_tabla = self.seleccionar_estado(estado.TODOS)
@@ -183,14 +198,14 @@ class TablaEquipos(object):
     # podems atender a todos los posibles zonas sin necesidad de pasar el
     # número de zona como argumento.
     @staticmethod
-    def editar_zona(zona):
+    def __editar_zona(zona):
         def decorator(funcion):
             def wrapper(fila, evento=None):
                 return funcion(fila, zona, evento)
             return wrapper
         return decorator
 
-    def editar_zona_aux(self, fila, zona, evento=None):
+    def __editar_zona_aux(self, fila, zona, evento=None):
         """
         Función principal de edición de zonas.
 
@@ -206,10 +221,19 @@ class TablaEquipos(object):
         # Si el equipo no está registrado, no podemos homologarlo todavía.
         if self.__conexion.estado_equipo(fila) == 0:
             return
+        # Función para definir el color de la etiqueta de la página.
+
+        def color_punto(valor):
+            return self.__colores["COLOR_SI"] if valor == 0 else self.__colores["COLOR_NO"]
         # Creamos una nueva página para editar los puntos de la zona.
         try:
+            # Fijamos el mismo color del borde de la tabla en la página.
+            colores_tabla = leer_colores_tabla()
+
             self.__pagina_edicion = Pagina(
-                self.desbloquear,  self.__puntos, self.__conexion, fila, zona)
+                self.__puntos, self.__conexion, fila, zona,
+                self.__desbloquear, color_punto, colores_tabla["BORDE"])
+
         except BlockingIOError as e:
             tkinter.messagebox.showerror(
                 "Error edición equipo", e)
@@ -271,7 +295,7 @@ class TablaEquipos(object):
         self.refrescar_tabla()
         return self.__estado_tabla
 
-    def desbloquear(self):
+    def __desbloquear(self):
         """
         Evento que debe ser llamado una vez se cierre la página de edición.
 
@@ -303,11 +327,11 @@ class TablaEquipos(object):
         datos_equipo = self.__temp_estado[fila]
         estado_equipo = datos_equipo["estado"]
         if estado_equipo == "I":
-            return "white"
+            return self.__colores["COLOR_NP"]
         elif estado_equipo == "R":
-            return "red"
+            return self.__colores["COLOR_NO"]
         elif estado_equipo == "H":
-            return "green"
+            return self.__colores["COLOR_SI"]
         else:
             raise ValueError("Vista ListaEstadosEquipos incorrecta")
 

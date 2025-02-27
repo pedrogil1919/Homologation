@@ -15,23 +15,22 @@ import mariadb
 from modelo.desplazamiento_tabla import Desplazamiento
 
 
-COLOR_SI = "PaleGreen1"
-COLOR_NO = "coral1"
-
-
 class Pagina(object):
 
-    def __init__(self, desbloquear, marco, conexion, fila, zona):
+    def __init__(self, marco, conexion, fila, zona,
+                 desbloquear, color_punto, color_borde="black",
+                 margen_x=10, margen_y=5):
         """
         Argumentos:
-        - desbloquear: Función, si es necesaria, para desbloquear al módulo
-          llamante, ya que inicialmente, esta página está pensada para bloquear
-          al módulo llamante mientras no la cerremos.
         - marco: Frame de tkinter donde construir la página
         - conexion
         - fila: fila de la tabla a editar
         - zona: zona de homologación a editar.
-
+        - desbloquear: Función, si es necesaria, para desbloquear al módulo
+          llamante, ya que inicialmente, esta página está pensada para bloquear
+          al módulo llamante mientras no la cerremos.
+        - color_punto: función que devuelve el color de un punto en función de
+          su valor. Toma como argumento un entero, y devuelve un color
         """
         # Guardamos la referencia a la función que habrá que llamar cuando
         # cerremos la ventana.
@@ -41,7 +40,8 @@ class Pagina(object):
         self.__marco = marco
         # Y el número de zona que estamos editando.
         self.__zona = zona
-
+        # Función que determina el color de una etiqueta en función de su valor.
+        self.__color_punto = color_punto
         # Obtenemos el nombre y el dorsal del equipo.
         self.__equipo, nombre = conexion.datos_equipo(fila)
 
@@ -59,10 +59,10 @@ class Pagina(object):
         tkinter.Label(self.__marco, text=cabecera, height=1).grid(
             row=0, column=0, sticky="nsew")
         # Otro marco donde mostrar los puntos de homologación.
-        marco_canvas = tkinter.Frame(self.__marco, bg="gray")
+        marco_canvas = tkinter.Frame(self.__marco)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
         # Y añadimos un marco con dos botones en la parte inferior de la página.
-        botones = tkinter.Frame(self.__marco, bg="gray90")
+        botones = tkinter.Frame(self.__marco)
         botones.grid(row=2, column=0, sticky="nsew")
 
         b1 = tkinter.Button(botones, text="Cancelar", command=self.cancelar)
@@ -85,7 +85,7 @@ class Pagina(object):
         ########################################################################
         # Creamos un canvas para que se pueda añadir una barra de desplazamiento
         # vertical cuando el número de puntos sea grande.
-        self.__canvas = tkinter.Canvas(marco_canvas, bg="blue")
+        self.__canvas = tkinter.Canvas(marco_canvas)
         self.__canvas.grid(row=0, column=0, sticky="nsew")
         self.__barra = tkinter.Scrollbar(
             marco_canvas, orient=tkinter.VERTICAL, command=self.__canvas.yview)
@@ -101,9 +101,8 @@ class Pagina(object):
         marco_canvas.columnconfigure(0, weight=1)
         ########################################################################
         ########################################################################
-
         # Construimos el marco donde mostrar todos los puntos a homologar.
-        self.__pagina = tkinter.Frame(self.__canvas, bg="yellow")
+        self.__pagina = tkinter.Frame(self.__canvas, bg=color_borde)
         self.__canvas.create_window(
             (1, 1), window=self.__pagina, anchor="nw", tags="frame")
 
@@ -111,11 +110,11 @@ class Pagina(object):
         for fila, elemento in enumerate(lista_puntos):
             # Obtenemos el color de fondo en función de si el punto está
             # suprado o no.
-            color = COLOR_SI if elemento["valor"] == 0 else COLOR_NO
+            color = self.__color_punto(elemento["valor"])
             etiqueta = tkinter.Label(
                 self.__pagina, text=elemento["descripcion"], bg=color,
-                anchor="w", justify=tkinter.LEFT, padx=10, pady=5)
-            etiqueta.grid(row=fila, column=0, sticky="nsew", pady=1)
+                anchor="w", justify=tkinter.LEFT, padx=margen_x, pady=margen_y)
+            etiqueta.grid(row=fila, column=0, sticky="nsew", padx=1, pady=1)
 
             # Asociamos el evento del ratón con la función que permite cambiar
             # el estado del punto.
@@ -179,8 +178,7 @@ class Pagina(object):
             return
         # Y al mismo tiempo determinamos el color con el que representarlo en
         # la página.
-        color = COLOR_SI if valor == 0 else COLOR_NO
-        etiqueta.config(bg=color)
+        etiqueta.config(bg=self.__color_punto(valor))
 
     def __actualizar_tamaño(self, evento=None):
         # Ajustamos el ancho del frame que contiene las etiquetas al mismo

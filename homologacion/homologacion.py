@@ -6,9 +6,11 @@ Created on 3 feb 2025
 
 import sys
 import time
+from tkinter import PhotoImage
 import tkinter
 
 from leer_constantes import abrir_archivo_xml, leer_conexion, leer_ancho_pagina
+from leer_constantes import leer_logos
 from modelo.base_datos import Conexion
 from vista.tabla_equipos import TablaEquipos
 from vista.ventana_inicio import crear_ventana_inicio
@@ -92,9 +94,14 @@ ventana_inicio.destroy()
 # Ventana principal
 ventana_principal = tkinter.Tk()
 
+imagenes = leer_logos()
 # Creamos una cabecera para la aplicación.
-cabecera = tkinter.Frame(ventana_principal, bg="green", height=50)
+cabecera = tkinter.Frame(ventana_principal)
 cabecera.grid(row=0, column=0, sticky="nsew")
+imagen = PhotoImage(file=imagenes["CABECERA"])
+
+# Agregar imagen dentro del Frame usando Label
+tkinter.Label(cabecera, image=imagen).pack(padx=10, pady=10)
 
 # Creamos un marco donde colocar la tabla
 tabla = tkinter.Frame(ventana_principal, bg="yellow")

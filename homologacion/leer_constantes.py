@@ -79,6 +79,18 @@ def leer_conexion():
 
 
 @captura_error
+def leer_ventana_inicio():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("graficos")
+    directorio = elemento.attrib["DIRECTORIO"]
+    elemento = elemento.find("inicio")
+    directorio += elemento.attrib["DIRECTORIO"]
+    imagen = elemento.attrib["IMAGEN"]
+    tiempo = float(elemento.attrib["TIEMPO"])
+    return directorio, imagen, tiempo
+
+
+@captura_error
 def leer_cabecera():
     raiz = archivo_xml.getroot()
     elemento = raiz.find("cabecera")
@@ -89,11 +101,96 @@ def leer_cabecera():
 
 
 @captura_error
+def leer_fuente():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("fuente")
+    datos_fuente = (
+        elemento.attrib["FAMILIA"],
+        int(elemento.attrib["TAMAÑO"]),
+        elemento.attrib["ESTILO"])
+    return datos_fuente
+
+
+@captura_error
+def leer_fuente_cabecera():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("fuente_cabecera")
+    datos_fuente = (
+        elemento.attrib["FAMILIA"],
+        int(elemento.attrib["TAMAÑO"]),
+        elemento.attrib["ESTILO"])
+    color_fuente = elemento.attrib["COLOR"]
+    return datos_fuente, color_fuente
+
+
+@captura_error
+def leer_fuente_filas():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("fuente_filas")
+    datos_fuente = (
+        elemento.attrib["FAMILIA"],
+        int(elemento.attrib["TAMAÑO"]),
+        elemento.attrib["ESTILO"])
+    color_fuente = elemento.attrib["COLOR"]
+    return datos_fuente, color_fuente
+
+
+@captura_error
+def leer_colores_puntos():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("colores_puntos")
+    lista_colores = {
+        "COLOR_SI": elemento.attrib["COLOR_SI"],
+        "COLOR_NO": elemento.attrib["COLOR_NO"],
+        "COLOR_NP": elemento.attrib["COLOR_NP"]
+    }
+    return lista_colores
+
+
+@captura_error
+def leer_colores_tabla():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("colores_tabla")
+
+    lista_colores = {
+        "BORDE": elemento.attrib["BORDE"],
+        "FONDO": elemento.attrib["FONDO"],
+        "CABECERA": elemento.attrib["CABECERA"],
+        "FILAS": elemento.attrib["FILAS"]}
+
+    return lista_colores
+
+
+@captura_error
+def leer_logos():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("graficos")
+    directorio = elemento.attrib["DIRECTORIO"]
+    elemento = elemento.find("logos")
+    directorio += elemento.attrib["DIRECTORIO"]
+    cabecera = directorio + elemento.attrib["CABECERA"]
+    logo = directorio + elemento.attrib["FONDO"]
+    return {
+        "CABECERA": cabecera,
+        "LOGO": logo}
+
+
+@captura_error
 def leer_ancho_pagina():
     raiz = archivo_xml.getroot()
     elemento = raiz.find("pagina")
     return int(elemento.attrib["ANCHO"])
 
+
+@captura_error
+def leer_margen_pagina():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("pagina")
+    return int(elemento.attrib["MARGENX"]), int(elemento.attrib["MARGENY"])
+
+
+##############################################################
+"""
 
 @captura_error
 def leer_pantalla_resultado():
@@ -110,18 +207,6 @@ def leer_pantalla_resultado():
         "PNG_DIR":  elemento.attrib["PNG_DIR"],
         "PNG_PASS": elemento.attrib["PNG_PASS"]}
     return datos_servidor_ftp, tiempo
-
-
-@captura_error
-def leer_ventana_inicio():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("graficos")
-    directorio = elemento.attrib["DIRECTORIO"]
-    elemento = elemento.find("inicio")
-    directorio += elemento.attrib["DIRECTORIO"]
-    imagen = elemento.attrib["IMAGEN"]
-    tiempo = float(elemento.attrib["TIEMPO"])
-    return directorio, imagen, tiempo
 
 
 @captura_error
@@ -197,16 +282,6 @@ def leer_escalado():
     return datos_escalado
 
 
-@captura_error
-def leer_fuente():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("fuente")
-    datos_fuente = (
-        elemento.attrib["FAMILIA"],
-        int(elemento.attrib["TAMAÑO"]),
-        elemento.attrib["ESTILO"])
-    return datos_fuente
-
 ################################################################################
 # FUNCIONES DE ESCRITURA DEL ARCHIVO DE CONFIGURACIÓN
 ################################################################################
@@ -241,3 +316,5 @@ def guardar_campos(lista_campos):
             nuevo_campo.set("id", str(campo["ID_CAMPO"]))
             elemento.append(nuevo_campo)
     archivo_xml.write(nombre_xml)
+    
+"""

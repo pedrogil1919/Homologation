@@ -37,15 +37,6 @@ import tkinter
 
 from modelo.desplazamiento_tabla import Desplazamiento
 
-
-# Definición de colores
-BORDE = "black"
-FONDO_CABECERA = "LightBlue1"
-TEXTO_CABECERA = "gray42"
-FONDO_CANVAS = "gray90"
-FONDO_DATOS = "wheat1"
-TEXTO_DATOS = "black"
-
 # Variable auxiliar para convertir códigos de alinación con los códigos
 # requiridos por el argumento anchor de tkinter.
 ANCHOR = {
@@ -62,9 +53,14 @@ class Tabla(object):
                  alineacion=(0,),
                  alto_cabecera=20,
                  alto_datos=20,
-                 colores="white",
-                 fuente_cabecera=("LIBERATION SANS", 12, ""),
-                 fuente_datos=("LIBERATION SANS", 12, "")):
+                 color_borde="black",
+                 color_fondo="gray",
+                 color_cabecera="blue",
+                 color_filas="white",
+                 fuente_cabecera=("LIBERATION SANS", 20, ""),
+                 color_fuente_cabecera="black",
+                 fuente_filas=("LIBERATION SANS", 12, ""),
+                 color_fuente_filas="black"):
         """
         Construcción de la tabla, y configuración.
 
@@ -104,7 +100,9 @@ class Tabla(object):
         # Altura de las filas de los datos
         self.__alto_datos = alto_datos
         # Y las fuentes para los textos.
-        self.__fuente_datos = fuente_datos
+        self.__color_filas = color_filas
+        self.__fuente_filas = fuente_filas
+        self.__color_fuente_filas = color_fuente_filas
         # Guardamos la forma de alinear el texto de las etiquetas.
         self.__alineacion = alineacion
         # Comprobamos que todos los argumentos tengan el mismo número de
@@ -120,10 +118,10 @@ class Tabla(object):
         ########################################################################
         ########################################################################
         # Construimos un marco para la cabecera
-        marco_cabecera = tkinter.Frame(marco, bg=BORDE)
+        marco_cabecera = tkinter.Frame(marco, bg=color_borde)
         marco_cabecera.grid(row=0, column=0, sticky="nsew")
         # Construimos otro marco para las filas de datos:
-        marco_canvas = tkinter.Frame(marco, bg=FONDO_CANVAS)
+        marco_canvas = tkinter.Frame(marco, bg=color_fondo)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
 
         # Adaptamos el ancho del grid al tamaño del contenedor.
@@ -137,7 +135,7 @@ class Tabla(object):
 
         # Creamos un Canvas para que se pueda añadir una barra de desplazamiento
         # vertical cuando el número de filas sea grande.
-        self.__canvas = tkinter.Canvas(marco_canvas, bg=FONDO_CANVAS)
+        self.__canvas = tkinter.Canvas(marco_canvas, bg=color_fondo)
         # y lo ponemos a la izquierda del marco anterior.
         self.__canvas.grid(row=0, column=0, sticky="nsew")
         # Añadimos la barra de deslizamiento.
@@ -159,7 +157,7 @@ class Tabla(object):
 
         # Finalmente, construimos el marco donde crearemos la tabla con las
         # filas de datos.
-        self.__marco_tabla = tkinter.Frame(self.__canvas, bg=BORDE)
+        self.__marco_tabla = tkinter.Frame(self.__canvas, bg=color_borde)
         # Este marco debe ir dentro del canvas para que se pueda desplazar.
         self.__canvas.create_window(
             (1, 1), window=self.__marco_tabla, anchor="nw", tags="frame")
@@ -184,7 +182,7 @@ class Tabla(object):
             marco_aux.pack_propagate(False)
             # Y añadimos la etiqueta a la cabecera.
             etiqueta_aux = tkinter.Label(
-                marco_aux, bg=FONDO_CABECERA, fg=TEXTO_CABECERA,
+                marco_aux, bg=color_cabecera, fg=color_fuente_cabecera,
                 text=dato, font=fuente_cabecera)
             etiqueta_aux.pack(fill=tkinter.BOTH, expand=True)
 
@@ -310,8 +308,8 @@ class Tabla(object):
             marco_celda.pack_propagate(False)
             # Y creamos la etiqueta dentro del marco anterior.
             etiqueta_celda = tkinter.Label(
-                marco_celda, fg=TEXTO_DATOS,
-                text=dato, font=self.__fuente_datos,
+                marco_celda, fg=self.__color_fuente_filas,
+                text=dato, font=self.__fuente_filas,
                 anchor=ANCHOR[self.__alineacion[columna]], padx=10)
             # Asighamos el color de la celda en función de la configuración
             self.__color_celda(fila, columna, etiqueta_celda)
@@ -491,7 +489,7 @@ class Tabla(object):
         except KeyError:
             # En caso de que no exista, asignamos el color por defecto de la
             # tabla
-            color = FONDO_DATOS
+            color = self.__color_filas
         else:
             # Comprobamos si tenemos una función para calcular el color de
             # la celda
