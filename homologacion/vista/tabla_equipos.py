@@ -25,7 +25,7 @@ import tkinter.messagebox
 
 from leer_constantes import leer_cabecera
 from leer_constantes import leer_colores_tabla, leer_colores_puntos
-from leer_constantes import leer_fuente_cabecera, leer_fuente_filas
+from leer_constantes import leer_fuente
 from modelo.base_datos import estado
 from modelo.pagina_edicion import Pagina
 from modelo.tabla import Tabla
@@ -100,8 +100,8 @@ class TablaEquipos(object):
 
         # Obtenemos los datos de configuración de toda la interfaz.
         colores_tabla = leer_colores_tabla()
-        fuente_cabecera, color_fuente_cabecera = leer_fuente_cabecera()
-        self.__fuente_filas, self.__color_fuente_filas = leer_fuente_filas()
+        fuente_cabecera, color_fuente_cabecera = leer_fuente("tabla")
+        self.__fuente_filas, self.__color_fuente_filas = leer_fuente("filas")
         # Obtenemos los datos de configuración de la tabla desde la
         # base de datos y el archivo xml.
         cabecera = leer_cabecera()

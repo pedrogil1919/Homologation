@@ -13,6 +13,7 @@ import tkinter
 import mariadb
 
 from modelo.desplazamiento_tabla import Desplazamiento
+from leer_constantes import leer_fuente
 
 
 class Pagina(object):
@@ -31,6 +32,7 @@ class Pagina(object):
           al módulo llamante mientras no la cerremos.
         - color_punto: función que devuelve el color de un punto en función de
           su valor. Toma como argumento un entero, y devuelve un color
+          
         """
         # Guardamos la referencia a la función que habrá que llamar cuando
         # cerremos la ventana.
@@ -56,8 +58,10 @@ class Pagina(object):
         ########################################################################
         # Construimos una cabecera para incluir el nombre del equipo.
         cabecera = "(%i) %s - Zona %s" % (self.__equipo, nombre, zona)
-        tkinter.Label(self.__marco, text=cabecera, height=1).grid(
-            row=0, column=0, sticky="nsew")
+        fuente, color_fuente = leer_fuente("pagina")
+        tkinter.Label(
+            self.__marco, text=cabecera, height=1, font=fuente,
+            fg=color_fuente).grid(row=0, column=0, sticky="nsew")
         # Otro marco donde mostrar los puntos de homologación.
         marco_canvas = tkinter.Frame(self.__marco)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
@@ -73,6 +77,8 @@ class Pagina(object):
 
         b1.bind("<Return>", lambda __: self.cancelar())
         b2.bind("<Return>", lambda __: self.guardar())
+        b1.bind("<KP_Enter>", lambda __: self.cancelar())
+        b2.bind("<KP_Enter>", lambda __: self.guardar())
         b2.focus_set()
 
         # Ajustamos para que todo el espacio sobrante lo ocupe el marco que
@@ -106,13 +112,16 @@ class Pagina(object):
         self.__canvas.create_window(
             (1, 1), window=self.__pagina, anchor="nw", tags="frame")
 
+        fuente, color_fuente = leer_fuente("puntos")
         # Los añadimos al marco cada uno debajo del anterior.
         for fila, elemento in enumerate(lista_puntos):
             # Obtenemos el color de fondo en función de si el punto está
             # suprado o no.
             color = self.__color_punto(elemento["valor"])
+
             etiqueta = tkinter.Label(
                 self.__pagina, text=elemento["descripcion"], bg=color,
+                font=fuente, fg=color_fuente,
                 anchor="w", justify=tkinter.LEFT, padx=margen_x, pady=margen_y)
             etiqueta.grid(row=fila, column=0, sticky="nsew", padx=1, pady=1)
 

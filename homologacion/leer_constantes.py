@@ -29,10 +29,17 @@ def captura_error(funcion_leer_xml):
     pantalla en caso de error en el archivo.
 
     """
-    def control():
+    def control(argumento=None):
         try:
             # Llamamos a la función de lectura del xml.
-            res = funcion_leer_xml()
+            if argumento is None:
+                # NOTA: Si el argumento es None, se supone que estamos
+                # realizando la llamada a una función que no acepta argumentos.
+                res = funcion_leer_xml()
+            else:
+                # Sin embargo, si no es None, es una función que acepta un
+                # argumento.
+                res = funcion_leer_xml(argumento)
             # Y devolvemos los datos leidos.
             return res
         except (AttributeError, KeyError):
@@ -101,32 +108,12 @@ def leer_cabecera():
 
 
 @captura_error
-def leer_fuente():
+def leer_fuente(zona=""):
     raiz = archivo_xml.getroot()
-    elemento = raiz.find("fuente")
-    datos_fuente = (
-        elemento.attrib["FAMILIA"],
-        int(elemento.attrib["TAMAÑO"]),
-        elemento.attrib["ESTILO"])
-    return datos_fuente
-
-
-@captura_error
-def leer_fuente_cabecera():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("fuente_cabecera")
-    datos_fuente = (
-        elemento.attrib["FAMILIA"],
-        int(elemento.attrib["TAMAÑO"]),
-        elemento.attrib["ESTILO"])
-    color_fuente = elemento.attrib["COLOR"]
-    return datos_fuente, color_fuente
-
-
-@captura_error
-def leer_fuente_filas():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("fuente_filas")
+    if zona == "":
+        elemento = raiz.find("fuente")
+    else:
+        elemento = raiz.find("fuente_%s" % zona)
     datos_fuente = (
         elemento.attrib["FAMILIA"],
         int(elemento.attrib["TAMAÑO"]),

@@ -18,30 +18,11 @@
         <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="1.5" />
         <logos DIRECTORIO="" CABECERA="eurobotSpain.png" FONDO="alcabot.png"/>
     </graficos>
-    <fuente_cabecera FAMILIA="LIBERATION SANS" TAMAÑO="20" ESTILO="bold" COLOR="gray10"/> 
-    <fuente_filas FAMILIA="LIBERATION SANS" TAMAÑO="12" ESTILO="" COLOR="red"/> 
-    <fuente FAMILIA="LIBERATION SANS" TAMAÑO="10" ESTILO=""/> 
-	
-	<!--
-	<fuentes>
-	
-	</fuentes>
-    <graficos DIRECTORIO="graficos/">
-        <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="0.5" />
-    </graficos>
     
-
-
-    <partidos TIPO_ACCESO="EN JUEGO" TIEMPO_CONEXION="1000">
-    </partidos>
-
-    <resultados PNG_GUARDAR="False" TIEMPO_REFRESCO="100" TIEMPO_APAGADO="0" PNG_HOST="www.eurobot.es" PNG_USER="arbitros" PNG_DIR="/var/www/html/resultados/" PNG_PASS="YmV8Wh#9h6mhIm" />
-    
-    <teclado> 
-    	<atajo ARBITRO="1" ARCHIVO="atajosIZ.ods" />
-    	<atajo ARBITRO="2" ARCHIVO="atajosDR.ods" />
-    	<atajo ARBITRO="3" ARCHIVO="atajosFN.ods" />
-    </teclado>
-    <escalado ZOOM="FALSE" BORDE="20" BARRA="TRUE" VERTICAL="FALSE" GIRAR="FALSE" />
-    -->
+    <fuente        FAMILIA="LIBERATION SANS" TAMAÑO="10" ESTILO=""     COLOR="black"/> 
+    <fuente_tabla  FAMILIA="LIBERATION SANS" TAMAÑO="20" ESTILO="bold" COLOR="gray10"/> 
+    <fuente_filas  FAMILIA="LIBERATION SANS" TAMAÑO="12" ESTILO=""     COLOR="gray20"/> 
+    <fuente_pagina FAMILIA="LIBERATION SANS" TAMAÑO="30" ESTILO="bold" COLOR="blue"/> 
+    <fuente_puntos FAMILIA="LIBERATION SANS" TAMAÑO="15" ESTILO=""     COLOR="gray20"/> 
+	
 </EurobotHomologacion>

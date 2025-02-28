@@ -26,9 +26,10 @@ def crear_ventana_inicio():
     splash_image = ImageTk.PhotoImage(Image.open(directorio+imagen))
     splash_label = tkinter.Label(splash_window, image=splash_image)
     splash_label.pack()
+    fuente, __ = leer_fuente()
     servidor_label = tkinter.Label(
         splash_window, text="Conectando con %s..." % servidor["HOST"],
-        font=leer_fuente())
+        font=fuente)
     servidor_label.pack()
     # Centrar la ventana en la pantalla.
     monitor = screeninfo.get_monitors()
