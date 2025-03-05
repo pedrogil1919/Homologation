@@ -12,8 +12,8 @@ import tkinter
 
 import mariadb
 
-from modelo.desplazamiento_tabla import Desplazamiento
 from leer_constantes import leer_fuente
+from modelo.desplazamiento_tabla import Desplazamiento
 
 
 class Pagina(object):
@@ -32,7 +32,7 @@ class Pagina(object):
           al módulo llamante mientras no la cerremos.
         - color_punto: función que devuelve el color de un punto en función de
           su valor. Toma como argumento un entero, y devuelve un color
-          
+
         """
         # Guardamos la referencia a la función que habrá que llamar cuando
         # cerremos la ventana.
@@ -127,7 +127,7 @@ class Pagina(object):
 
             # Asociamos el evento del ratón con la función que permite cambiar
             # el estado del punto.
-            punto = elemento["ID_HOMOLOGACION_PUNTO"]
+            punto = elemento["FK_HOMOLOGACION_PUNTO"]
             etiqueta.bind("<Button-1>", partial(
                 self.__actualizar_punto, punto, etiqueta))
 

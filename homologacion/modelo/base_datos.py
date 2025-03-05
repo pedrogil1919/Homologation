@@ -77,7 +77,7 @@ class Conexion():
         cursor = self.__conexion.cursor(dictionary=False, prepared=False)
         filtro_registrado = ESTADO[estado][0]
         filtro_homologado = ESTADO[estado][1]
-        consulta = "SELECT * FROM ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
+        consulta = "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
             format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
         if equipo is not None:
             consulta += " AND ID_EQUIPO = %i" % equipo
@@ -92,10 +92,10 @@ class Conexion():
         - I: Equipo inscrito pero no registrado todavía.
         - R: Equipo registrado pero no homologado todavía.
         - H: Equipo registrado y homologado.
-        
+
         """
         cursor = self.__conexion.cursor(dictionary=True, prepared=False)
-        consulta = "SELECT * FROM ListaEstadosEquipos"
+        consulta = "SELECT * FROM Homologacion_EstadoEquipos"
         if equipo is not None:
             consulta += " WHERE ID_EQUIPO = %i" % equipo
         cursor.execute(consulta)
@@ -115,7 +115,7 @@ class Conexion():
         # Obtenemos el dorsal del equipo a partir de la fila en la tabla.
         cursor_dorsal = self.__conexion.cursor(prepared=True)
         cursor_dorsal.execute(
-            "SELECT ID_EQUIPO FROM ListaEquipos WHERE ORDEN = %s", (fila,))
+            "SELECT ID_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
         if cursor_dorsal.rowcount != 1:
             raise RuntimeError("Error en función de cambio de estado.")
         dorsal = cursor_dorsal.fetchone()[0]
@@ -153,7 +153,7 @@ class Conexion():
         cursor_estado = self.__conexion.cursor(prepared=True)
         # Obtenemos el dorsal del equipo.
         cursor_dorsal.execute(
-            "SELECT ID_EQUIPO FROM ListaEquipos WHERE ORDEN = %s", (fila,))
+            "SELECT ID_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
         if cursor_dorsal.rowcount != 1:
             raise RuntimeError("Error en función de cambio de estado.")
         dorsal = cursor_dorsal.fetchone()[0]
@@ -172,7 +172,7 @@ class Conexion():
         """
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor.execute(
-            "SELECT ID_EQUIPO, equipo FROM ListaEquipos WHERE ORDEN = %s",
+            "SELECT ID_EQUIPO, equipo FROM Homologacion_ListaEquipos WHERE ORDEN = %s",
             (fila,))
 
         nombre = cursor.fetchone()
@@ -184,7 +184,7 @@ class Conexion():
 
         """
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
-        cursor.execute("SELECT * FROM ResumenHomologacionEquipos")
+        cursor.execute("SELECT * FROM Homologacion_ResumenEquipos")
         if cursor.rowcount != 1:
             raise RuntimeError("Error en la vista de resumen")
         lista = cursor.fetchone()
@@ -205,8 +205,8 @@ class Conexion():
         self.__abrir_transaccion(equipo)
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
         cursor.execute(
-            "SELECT * FROM ListaPuntosHomologacion WHERE "
-            "ID_EQUIPO = %s AND FK_HOMOLOGACION_ZONA = %s", (equipo, zona))
+            "SELECT * FROM Homologacion_ListaPuntos WHERE "
+            "FK_EQUIPO = %s AND FK_HOMOLOGACION_ZONA = %s", (equipo, zona))
 
         lista = cursor.fetchall()
         return lista
@@ -219,8 +219,8 @@ class Conexion():
         cursor_get = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor_set = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor_get.execute(
-            "SELECT valor FROM ListaPuntosHomologacion WHERE "
-            "ID_EQUIPO = %s AND ID_HOMOLOGACION_PUNTO = %s AND "
+            "SELECT valor FROM Homologacion_ListaPuntos WHERE "
+            "FK_EQUIPO = %s AND FK_HOMOLOGACION_PUNTO = %s AND "
             "FK_HOMOLOGACION_ZONA = %s", (equipo, punto, zona))
 
         if cursor_get.rowcount != 1:
@@ -256,7 +256,7 @@ class Conexion():
                 "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE NOWAIT",
                 (equipo,))
             cursor_puntos.execute(
-                "SELECT * FROM HomologacionEquipo WHERE FK_EQUIPO = %s "
+                "SELECT * FROM Homologacion_ListaPuntos WHERE FK_EQUIPO = %s "
                 "FOR UPDATE NOWAIT", (equipo,))
         except mariadb.OperationalError as e:
             # Detectamos si el equipo se encuentra bloqueado por otro usuario.
@@ -285,7 +285,7 @@ class Conexion():
         """
         # Obtenemos los nombres de las columnas que forman la vista.
         cursor = self.__conexion.cursor(dictionary=True, prepared=True)
-        cursor.execute("SHOW COLUMNS FROM ListaEquipos")
+        cursor.execute("SHOW COLUMNS FROM Homologacion_ListaEquipos")
         columnas = cursor.fetchall()
         return columnas
 
