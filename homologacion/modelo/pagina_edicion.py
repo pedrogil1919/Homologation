@@ -122,7 +122,8 @@ class Pagina(object):
             etiqueta = tkinter.Label(
                 self.__pagina, text=elemento["descripcion"], bg=color,
                 font=fuente, fg=color_fuente,
-                anchor="w", justify=tkinter.LEFT, padx=margen_x, pady=margen_y)
+                anchor="w", justify=tkinter.LEFT, pady=margen_y,
+                padx=elemento["nivel"]*margen_x)
             etiqueta.grid(row=fila, column=0, sticky="nsew", padx=1, pady=1)
 
             # Asociamos el evento del ratón con la función que permite cambiar
