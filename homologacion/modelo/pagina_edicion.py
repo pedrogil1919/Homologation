@@ -21,7 +21,7 @@ class Pagina(object):
 
     def __init__(self, marco, conexion, fila, zona,
                  desbloquear, color_punto, color_borde="black",
-                 margen_x=10, margen_y=5):
+                 margen_x=10, margen_y=5, indentacion=10):
         """
         Argumentos:
         - marco: Frame de tkinter donde construir la página
@@ -117,34 +117,111 @@ class Pagina(object):
             (1, 1), window=self.__pagina, anchor="nw", tags="frame")
 
         fuente, color_fuente = leer_fuente("puntos")
-        # Los añadimos al marco cada uno debajo del anterior.
-        for fila, elemento in enumerate(lista_puntos):
-            # Obtenemos el color de fondo en función de si el punto está
-            # suprado o no.
-            color = self.__color_punto(elemento["valor"])
 
-            etiqueta = tkinter.Label(
-                self.__pagina, text=elemento["descripcion"], bg=color,
-                font=fuente, fg=color_fuente,
-                anchor="w", justify=tkinter.LEFT, pady=margen_y,
-                padx=margen_x)
-            etiqueta.grid(row=fila, column=0, sticky="nsew",
-                          padx=(2*(elemento["nivel"]-1)*margen_x, 0), pady=1)
+        # Creamos una lista temporal con todas las etiquetas, para poder
+        # ocultar y desocultarlas en función del valor de su sección.
+        lista_etiquetas = {}
 
+        for elemento, fila, desc in self.__lista_puntos(lista_puntos):
+            elemento["fila"] = fila
+            punto = elemento["FK_HOMOLOGACION_PUNTO"]
+            nivel = elemento["nivel"]
+            valor = elemento["valor"]
+            seccion = elemento["seccion"]
+
+            # self.__añadir_etiqueta(etiqueta, fila, nivel)
             # Asociamos el evento del ratón con la función que permite cambiar
             # el estado del punto.
-            punto = elemento["FK_HOMOLOGACION_PUNTO"]
+            seccion = elemento["seccion"]
+            if seccion == 0:
+                # Primero obtenemos las etiquetas que dependen de esta. Tened en
+                # cuenta que de acuerdo al proceso de ordenación de los puntos
+                # que realiza el generador de este bucle, los puntos
+                # dependientes se generan antes que la sección de la que
+                # depende, y por lo tanto, aquí ya tendremos las etiquetas
+                # construidas.
+                lista_etiquetas_desc = [
+                    v for k, v in lista_etiquetas.items() if k in desc]
+            else:
+                lista_etiquetas_desc = None
+
+            # Obtenemos el color de fondo en función de si el punto está
+            # validado o no, o se trata de una sección.
+            # color = self.__color_punto(valor, seccion)
+
+            etiqueta = Etiqueta(
+                self.__pagina, punto, fila, nivel, seccion, valor,
+                lista_etiquetas_desc,
+                text=elemento["descripcion"],
+                font=fuente, fg=color_fuente,
+                anchor="w", justify=tkinter.LEFT, pady=margen_y, padx=margen_x)
+
+            etiqueta.actualizar(valor)
             etiqueta.bind("<Button-1>", partial(
-                self.__actualizar_punto, punto, etiqueta))
+                self.__actualizar_punto, punto, seccion, etiqueta))
+
+            lista_etiquetas[fila] = etiqueta
 
         self.__pagina.columnconfigure(0, weight=1)
         self.__canvas.bind("<Configure>", self.__actualizar_tamaño)
+        self.__pagina.bind("<Configure>",  self.__actualizar_tamaño)
 
         # Añadimos un módulo para implementar las funciones de desplazamiento
         # vertical de la página si el número de puntos a revisar es elevado y
         # no coge en la ventana.
         self.__vertical = Desplazamiento(
             self.__canvas, self.__pagina, self.__barra)
+
+    def __lista_puntos(self, lista):
+        """
+        Devuelve la lista de puntos para la página
+
+        La lista de puntos debe llevar el formato de la vista
+        Homologacion_ListaPuntos, cuyo orden es (equipo, zona, nivel, seccion,
+        punto) y devuelve un generador que itera sobre todos los puntos. Los
+        valores devueltos son:
+        - registro de la vista anterior
+        - numero de orden (ver nota debajo)
+        - número de registros subsigientes que son dependientes de éste.
+
+        """
+        # Convertimos la lista de puntos, en un diccionario de listas de puntos,
+        # separadas por niveles.
+        lista_aux = []
+        actual = 0
+        nivel_actual = lista[0]["nivel"]
+        for indice, elemento in enumerate(lista):
+            if elemento["nivel"] == nivel_actual:
+                continue
+            lista_aux += [lista[actual:indice]]
+            nivel_actual = elemento["nivel"]
+            actual = indice
+        # El último nivel de la lista hay que generarlo fuera ya del bucle.
+        lista_aux += [lista[actual:indice+1]]
+        for el, ind, desc in self.__lista_puntos_jerarquico(lista_aux, 1):
+            yield el, ind, desc
+
+    def __lista_puntos_jerarquico(self, listas, indice, seccion=None):
+        """
+        Generador que toma una lista devuelta por la vista ListaPuntos, cuyo
+        orden es (nivel, seccion, punto), y las devuelve colocando después de
+        cada sección, los puntos que dependen de dicha sección.
+
+        """
+        for elemento in listas[0]:
+            if seccion is None or elemento["FK_HOMOLOGACION_SECCION"] == seccion:
+                ultimo = indice
+                desc = []
+                if elemento["seccion"] == 0:
+                    for e, i, h in self.__lista_puntos_jerarquico(
+                            listas[1:], indice + 1,
+                            elemento["FK_HOMOLOGACION_PUNTO"]):
+                        yield e, i, h
+                        if i > ultimo:
+                            ultimo = i
+                        desc += [i]
+                yield elemento, indice, desc
+                indice = ultimo + 1
 
     def guardar(self):
         """
@@ -170,7 +247,7 @@ class Pagina(object):
 
 ################################################################################
 ################################################################################
-    def __actualizar_punto(self, punto, etiqueta, evento=None):
+    def __actualizar_punto(self, punto, seccion, etiqueta, evento=None):
         """
         Alterna el valor de un punto de homologación.
 
@@ -191,21 +268,11 @@ class Pagina(object):
                 tkinter.messagebox.showerror(
                     "Error en los datos del equipo", e)
             return
-        # Y al mismo tiempo determinamos el color con el que representarlo en
-        # la página.
-        etiqueta.config(bg=self.__color_punto(valor))
+
+        etiqueta.actualizar(valor)
+        self.__actualizar_tamaño()
 
     def __actualizar_tamaño(self, evento=None):
-        # Ajustamos el ancho del frame que contiene las etiquetas al mismo
-        # ancho que el canvas que lo contiene.
-        ancho = self.__canvas.winfo_width()
-        self.__canvas.itemconfig('frame', width=ancho)
-        # Ajustamos el parámetro wrraplength para que las etiquetas sean
-        # multilinea para aquellos puntos que sean muy largos.
-        # NOTA: hay que tener en cuenta que el ancho de la etiqueta es igual
-        # a la longitud del texto, más el margen (padx * 2).
-        for control in self.__pagina.winfo_children():
-            control.config(wraplength=ancho - 2*control["padx"])
 
         # Actualizamos la página, para que se recalcule el espacio requerido
         # una vez se sepa el número de líneas que ocupa cada etiqueta.
@@ -214,13 +281,25 @@ class Pagina(object):
         r = self.__canvas.bbox("frame")
         self.__canvas.configure(scrollregion=(2, 2, r[2], r[3]))
 
-        # Y la altura de la página, ya que no se ajusta solo.
-        self.__canvas.itemconfig(
-            'frame', height=self.__pagina.winfo_reqheight())
-
         # Comprobamos si debemos habilitar o no las funciones de desplazamiento
         # vetical de la página.
         self.__vertical.desp_vertical = True
+
+        altura = self.__pagina.winfo_reqheight()
+        # Y la altura de la página, ya que no se ajusta solo.
+        self.__canvas.itemconfig('frame', height=altura)
+
+        # Ajustamos el ancho del frame que contiene las etiquetas al mismo
+        # ancho que el canvas que lo contiene.
+        ancho = self.__canvas.winfo_width()
+        self.__canvas.itemconfig('frame', width=ancho)
+
+        # Ajustamos el parámetro wrraplength para que las etiquetas sean
+        # multilinea para aquellos puntos que sean muy largos.
+        # NOTA: hay que tener en cuenta que el ancho de la etiqueta es igual
+        # a la longitud del texto, más el margen (padx * 2).
+        for control in self.__pagina.winfo_children():
+            control.config(wraplength=ancho - 2*control["padx"])
 
     def get_equipo(self):
         return self.__equipo
