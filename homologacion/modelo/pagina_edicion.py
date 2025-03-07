@@ -401,7 +401,7 @@ class Pagina(object):
         self.__pagina.update_idletasks()
         # Fijamos el area de scroll del canvas.
         r = self.__canvas.bbox("frame")
-        self.__canvas.configure(scrollregion=(2, 2, r[2], r[3]))
+        self.__canvas.configure(scrollregion=(1, 1, r[2], r[3]))
 
         # Comprobamos si debemos habilitar o no las funciones de desplazamiento
         # vetical de la página.
