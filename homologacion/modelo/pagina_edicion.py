@@ -14,6 +14,7 @@ import mariadb
 
 from leer_constantes import leer_fuente
 from modelo.desplazamiento_tabla import Desplazamiento
+from modelo.etiqueta_punto import Etiqueta
 
 
 class Pagina(object):
@@ -42,6 +43,9 @@ class Pagina(object):
         self.__marco = marco
         # Y el número de zona que estamos editando.
         self.__zona = zona
+        # Ancho de la indentacion de etiquetas
+        Etiqueta.indentacion = indentacion
+        Etiqueta.funcion_color = staticmethod(color_punto)
         # Función que determina el color de una etiqueta en función de su valor.
         self.__color_punto = color_punto
         # Obtenemos el nombre y el dorsal del equipo.
