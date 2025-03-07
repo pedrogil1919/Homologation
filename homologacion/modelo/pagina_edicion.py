@@ -123,8 +123,9 @@ class Pagina(object):
                 self.__pagina, text=elemento["descripcion"], bg=color,
                 font=fuente, fg=color_fuente,
                 anchor="w", justify=tkinter.LEFT, pady=margen_y,
-                padx=elemento["nivel"]*margen_x)
-            etiqueta.grid(row=fila, column=0, sticky="nsew", padx=1, pady=1)
+                padx=margen_x)
+            etiqueta.grid(row=fila, column=0, sticky="nsew",
+                          padx=(2*(elemento["nivel"]-1)*margen_x, 0), pady=1)
 
             # Asociamos el evento del ratón con la función que permite cambiar
             # el estado del punto.
