@@ -12,7 +12,7 @@
 
 	<pagina ANCHO="400" MARGENX="10" MARGENY="5" />
 	<colores_tabla BORDE="gray40" FONDO="gray80" CABECERA="turquoise" FILAS="floral white"/>
-	<colores_puntos COLOR_SI="DarkSeaGreen1" COLOR_NO="coral1" COLOR_NP="azure2"/>
+	<colores_puntos COLOR_SI="DarkSeaGreen1" COLOR_NO="coral1" COLOR_NP="azure2" COLOR_SC="blue"/>
 	
     <graficos DIRECTORIO="graficos/">
         <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="1.5" />

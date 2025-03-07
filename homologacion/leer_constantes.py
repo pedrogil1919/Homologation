@@ -129,6 +129,7 @@ def leer_colores_puntos():
     lista_colores = {
         "COLOR_SI": elemento.attrib["COLOR_SI"],
         "COLOR_NO": elemento.attrib["COLOR_NO"],
+        "COLOR_SC": elemento.attrib["COLOR_SC"],
         "COLOR_NP": elemento.attrib["COLOR_NP"]
     }
     return lista_colores

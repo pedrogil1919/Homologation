@@ -229,7 +229,9 @@ class TablaEquipos(object):
             return
         # Función para definir el color de la etiqueta de la página.
 
-        def color_punto(valor):
+        def color_punto(valor, seccion):
+            if not seccion:
+                return self.__colores["COLOR_SC"]
             return self.__colores["COLOR_SI"] if valor == 0 else self.__colores["COLOR_NO"]
         # Creamos una nueva página para editar los puntos de la zona.
         try:
