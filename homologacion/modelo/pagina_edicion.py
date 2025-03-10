@@ -381,6 +381,8 @@ class Pagina(object):
                 #
                 tkinter.messagebox.showerror(
                     "Error en los datos del equipo", e)
+            else:
+                raise e
             return
 
         # Actualizamos la apariencia de la etiqueta, y de sus descendientes si

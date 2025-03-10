@@ -229,7 +229,7 @@ class Conexion():
 
         valor = 0 if valor == 1 else 1
         cursor_set.execute(
-            "UPDATE HomologacionEquipo SET valor = %s WHERE "
+            "UPDATE Homologacion_Equipo SET valor = %s WHERE "
             "FK_EQUIPO = %s AND FK_HOMOLOGACION_PUNTO = %s AND "
             "FK_HOMOLOGACION_ZONA = %s", (valor, equipo, punto, zona))
 
