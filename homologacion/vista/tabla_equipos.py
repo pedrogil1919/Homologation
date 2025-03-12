@@ -245,6 +245,9 @@ class TablaEquipos(object):
         except BlockingIOError as e:
             tkinter.messagebox.showerror(
                 "Error edición equipo", e)
+        except ValueError as e:
+            tkinter.messagebox.showerror(
+                "Error edición equipo", e)
         else:
             # Deshabilitamos las funciones de desplazamiento vertical de la
             # tabla, que se volverá a habilitar cuando la pagina anterior llame
