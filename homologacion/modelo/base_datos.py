@@ -209,7 +209,33 @@ class Conexion():
             "FK_EQUIPO = %s AND FK_HOMOLOGACION_ZONA = %s", (equipo, zona))
 
         lista = cursor.fetchall()
-        return lista
+
+        cursor2 = self.__conexion.cursor(prepared=True)
+        cursor2.execute(
+            "SELECT comentario FROM Homologacion_Comentario WHERE "
+            "FK_EQUIPO = %s AND FK_HOMOLOGACION_ZONA = %s", (equipo, zona))
+        if cursor2.rowcount != 1:
+            raise ValueError(
+                "Error en la tabla Comentario. Vuelve a registrar el equipo para proseguir.")
+        comentario = cursor2.fetchone()
+        return lista, comentario[0]
+
+    def actualizar_comentario(self, equipo, zona, texto):
+        """
+        Actualiza el texto del campo comentario para el equipo y zona
+
+        """
+        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
+        cursor.execute(
+            "UPDATE Homologacion_Comentario SET comentario = %s "
+            "WHERE FK_EQUIPO = %s AND FK_HOMOLOGACION_ZONA = %s",
+            (texto, equipo, zona))
+        # Comprobamos que sólo se ha actualizado un registro.
+        # NOTA: Puede ser que el número sea igual a 0 si el comentario a
+        # añadir es el mismo que ya tenía. Por eso, sólo comprobamos que no
+        # haya más de un registro afectado.
+        if cursor.affected_rows > 1:
+            raise RuntimeError("Error al añadir comentario de equipo.")
 
     def actualizar_punto_homologacion(self, equipo, punto, zona):
         """
