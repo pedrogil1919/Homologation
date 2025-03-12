@@ -306,11 +306,13 @@ class TablaEquipos(object):
         self.refrescar_tabla()
         return self.__estado_tabla
 
-    def __desbloquear(self):
+    def __desbloquear(self, mensaje):
         """
         Evento que debe ser llamado una vez se cierre la página de edición.
 
         """
+        if not tkinter.messagebox.askokcancel("Finalizar edición equipo", mensaje):
+            return False
         # Cada vez que cerramos una página, refrescamos la tabla, ya que es
         # posible que el equipo haya cambiado de estado.
         self.refrescar_tabla(self.__pagina_edicion.equipo)
@@ -321,6 +323,7 @@ class TablaEquipos(object):
         # Habilitamos las funciones de desplazamiento vertical de la tabla.
         self.__tabla_equipos.desp_vertical = True
         self.__bloquear_pestañas(False)
+        return True
 
     def __bloquear_pestañas(self, bloquear=True):
         estado = tkinter.DISABLED if bloquear else tkinter.NORMAL
