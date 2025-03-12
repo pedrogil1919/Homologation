@@ -145,8 +145,8 @@ ventana_principal.minsize(tabla_equipos.ancho+ancho_pagina, 300)
 # Configuración del grid de la ventana principal.
 ################################################################################
 # Configuración del ajuste de tamaños.
-ventana_principal.columnconfigure(0, weight=1, minsize=tabla_equipos.ancho)
-ventana_principal.columnconfigure(1, weight=5, minsize=ancho_pagina)
+ventana_principal.columnconfigure(0, weight=0, minsize=tabla_equipos.ancho)
+ventana_principal.columnconfigure(1, weight=1, minsize=ancho_pagina)
 ventana_principal.rowconfigure(1, weight=1)
 
 # Iniciamos la ventana completamente maximizada. Tener en cuenta que esto

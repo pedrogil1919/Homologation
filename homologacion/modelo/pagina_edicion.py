@@ -72,11 +72,11 @@ class Pagina(object):
         # Obtenemos el nombre y el dorsal del equipo.
         self.__equipo, nombre = conexion.datos_equipo(fila)
 
-        # Obtenemos la lista de puntos a homologar.
+        # Obtenemos la lista de puntos a homologar, y los comentarios.
         # NOTA: realizamos la consulta en este punto, antes de construir la
         # interfaz, ya que es posible que el equipo esté bloquedo por otro
         # usuario, y no podamos continuar.
-        lista_puntos = self.__conexion.lista_puntos_homologacion(
+        lista_puntos, comentario = self.__conexion.lista_puntos_homologacion(
             self.__equipo, self.__zona)
 
         ########################################################################
@@ -87,31 +87,69 @@ class Pagina(object):
         tkinter.Label(
             self.__marco, text=cabecera, height=1, font=fuente,
             fg=color_fuente).grid(row=0, column=0, sticky="nsew")
+
         # Otro marco donde mostrar los puntos de homologación.
         marco_canvas = tkinter.Frame(self.__marco)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
+
+        # Añadimos un campo de texto para incluir comentarios.
+        tkinter.Label(self.__marco, text="Comentarios").grid(
+            row=2, column=0, sticky="w", padx=10, pady=(10, 1))
+        self.__campo_comentarios = tkinter.Text(
+            self.__marco, height=4, wrap="word")
+
+        self.__campo_comentarios.grid(
+            row=3, column=0, sticky="nsew", padx=10, pady=(1, 10))
+
+        # Asociamos el evento de pérdida de foco a guardar el texto que se haya
+        # introducido en el campo.
+        self.__campo_comentarios.bind(
+            "<FocusOut>", self.__guardar_comentario)
+        # Asociamos la tecla enter del tecldo interno y externo a perder el
+        # foco, de tal forma que provoca la ejecución del código anterior.
+        self.__campo_comentarios.bind(
+            "<Return>", self.__campo_perder_foco)
+        self.__campo_comentarios.bind(
+            "<KP_Enter>", self.__campo_perder_foco)
+        # A asociamos la tecla Tab también a perder el foco, evitando que se
+        # introduzca un tabulador en el texto.
+        self.__campo_comentarios.bind(
+            "<Tab>", self.__campo_perder_foco)
+
+        # Iniciamos el campo con el texto que tuviera ya el campo.
+        if comentario is not None:
+            self.__campo_comentarios.insert("1.0", comentario)
+
         # Y añadimos un marco con dos botones en la parte inferior de la página.
         botones = tkinter.Frame(self.__marco)
-        botones.grid(row=2, column=0, sticky="nsew")
+        botones.grid(row=4, column=0, sticky="nsew")
 
-        b1 = tkinter.Button(botones, text="Cancelar", command=self.cancelar)
-        b2 = tkinter.Button(botones, text="Guardar", command=self.guardar)
+        # Creamos los dos botones. Aquí es importante crear el botón de guardar
+        # el primero, para que la secuencia del Tab de el foco primero al de
+        # guardar, ya que si da primero al de cancelar, puede dar lugar a
+        # equivocaciones al usuario.
+        b2 = tkinter.Button(botones, text="Guardar", command=self.__guardar)
+        b1 = tkinter.Button(botones, text="Cancelar", command=self.__cancelar)
 
         b1.pack(side=tkinter.RIGHT, padx=10, pady=10)
         b2.pack(side=tkinter.RIGHT, padx=10, pady=10)
 
-        b1.bind("<Return>", lambda __: self.cancelar())
-        b2.bind("<Return>", lambda __: self.guardar())
-        b1.bind("<KP_Enter>", lambda __: self.cancelar())
-        b2.bind("<KP_Enter>", lambda __: self.guardar())
+        b1.bind("<Return>", self.__cancelar)
+        b2.bind("<Return>", self.__guardar)
+        b1.bind("<KP_Enter>", self.__cancelar)
+        b2.bind("<KP_Enter>", self.__guardar)
         b2.focus_set()
 
+        ########################################################################
+        ########################################################################
         # Ajustamos para que todo el espacio sobrante lo ocupe el marco que
         # mostrará los puntos de homologación.
         self.__marco.columnconfigure(index=0, weight=1)
         self.__marco.rowconfigure(index=0, weight=0)
         self.__marco.rowconfigure(index=1, weight=1)
         self.__marco.rowconfigure(index=2, weight=0)
+        self.__marco.rowconfigure(index=3, weight=0)
+        self.__marco.rowconfigure(index=4, weight=0)
 
         ########################################################################
         ########################################################################
@@ -201,7 +239,7 @@ class Pagina(object):
             # NOTA: En función de si es punto o sección, el evento se activa
             # con click o doble click.
             etiqueta.bind(evento, partial(
-                self.__actualizar_punto, punto, seccion, etiqueta))
+                self.__actualizar_punto, punto, etiqueta))
 
             # Añadimos la etiqueta a la lista global, por si hay que asignarla
             # para otra etiqueta de nivel superior
@@ -226,36 +264,68 @@ class Pagina(object):
 
 ################################################################################
 ################################################################################
-    def guardar(self):
+    def __guardar(self, evento=None):
         """
         Guardar todos los datos realizados hasta el momento y finalizar.
 
         """
-        self.__conexion.guardar()
-        for control in self.__marco.winfo_children():
-            control.destroy()
-        # Lanzamos el evento de desbloqueo del módulo llamante.
         try:
-            self.__desbloquear()
+            # Antes de finalizar, comprobamos si el usuario quiere guardar,
+            # o bien se ha confundido.
+            if not self.__desbloquear("¿Guardar datos?"):
+                # En caso de que el usuario no quiera guardar, salimos y
+                # esperamos a que el usuario vuelva a pulsar alguno de los
+                # botones.
+                return
         except Exception:
             # Es posible que el módulo llamante no nos pase ninguna función, ya
             # que no necesita bloquearse. En ese caso, simplemente ignoramos
             # la función.
             pass
+        # NOTA: Si el usuario pulsa Guardar sin hacer que el campo de
+        # comentarios pierda el foco, es posible que no se haya guardado los
+        # comentarios.
+        self.__guardar_comentario()
+        self.__conexion.guardar()
+        for control in self.__marco.winfo_children():
+            control.destroy()
+        # Lanzamos el evento de desbloqueo del módulo llamante.
 
-    def cancelar(self):
+    def __cancelar(self, evento=None):
         """
         Cancelar todos los datos realizados hasta el momento y finalizar.
 
         """
+        # Lanzamos el evento de desbloqueo del módulo llamante.
+        try:
+            if not self.__desbloquear("¿Cancelar modificaciones?"):
+                return
+        except Exception:
+            pass
         self.__conexion.cancelar()
         for control in self.__marco.winfo_children():
             control.destroy()
-        # Lanzamos el evento de desbloqueo del módulo llamante.
-        try:
-            self.__desbloquear()
-        except Exception:
-            pass
+
+    def __campo_perder_foco(self, evento=None):
+        """
+        Guardar comentario cuando el campo pierde el foco.
+
+        """
+        siguiente = evento.widget.tk_focusNext()
+        if siguiente:
+            siguiente.focus_set()
+        # Con esta instrucción, evitamos que si hemos llegado aquí al
+        # haber pulsado la tecla Tab, se incluya un tabulador en el texto.
+        return "break"
+
+    def __guardar_comentario(self, evento=None):
+        """
+        Guardar los comentarios en la base de datos.
+
+        """
+        comentario = self.__campo_comentarios.get("1.0", "end-1c")
+        self.__conexion.actualizar_comentario(
+            self.__equipo, self.__zona, comentario)
 
 ################################################################################
 ################################################################################
@@ -361,7 +431,7 @@ class Pagina(object):
                 # devuelto para esta sección.
                 indice = ultimo + 1
 
-    def __actualizar_punto(self, punto, seccion, etiqueta, evento=None):
+    def __actualizar_punto(self, punto, etiqueta, evento=None):
         """
         Alterna el valor de un punto de homologación entre True y False 
 
