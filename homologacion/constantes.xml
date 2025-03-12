@@ -4,7 +4,7 @@
     <cabecera>
         <ORDEN/>
         <ID_EQUIPO NOMBRE="DORSAL" ANCHO="120" ALINEACION="C" AJUSTE="0" ZONA="" />
-        <equipo    NOMBRE="NOMBRE" ANCHO="300" ALINEACION="L" AJUSTE="1" ZONA="0"/>
+        <equipo    NOMBRE="NOMBRE" ANCHO="400" ALINEACION="L" AJUSTE="1" ZONA="0"/>
         <Z1        NOMBRE="Z1"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="1"/>
         <Z2        NOMBRE="Z2"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="2"/>
         <Z3        NOMBRE="Z3"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="3"/>
@@ -24,5 +24,6 @@
     <fuente_filas  FAMILIA="LIBERATION SANS" TAMAÑO="12" ESTILO=""     COLOR="gray20"/> 
     <fuente_pagina FAMILIA="LIBERATION SANS" TAMAÑO="30" ESTILO="bold" COLOR="blue"/> 
     <fuente_puntos FAMILIA="LIBERATION SANS" TAMAÑO="15" ESTILO=""     COLOR="gray20"/> 
+    <fuente_coment FAMILIA="LIBERATION SANS" TAMAÑO="12" ESTILO=""     COLOR="black"/> 
 	
 </EurobotHomologacion>

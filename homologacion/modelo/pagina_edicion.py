@@ -94,13 +94,16 @@ class Pagina(object):
         marco_canvas = tkinter.Frame(self.__marco)
         marco_canvas.grid(row=1, column=0, sticky="nsew")
 
+        fuente, color_fuente = leer_fuente("coment")
         # Añadimos un campo de texto para incluir comentarios.
-        tkinter.Label(self.__marco, text="Comentarios").grid(
-            row=2, column=0, sticky="w", padx=10, pady=(10, 1))
         self.__campo_comentarios = tkinter.Text(
-            self.__marco, height=4, wrap="word")
+            self.__marco, height=4, font=fuente, fg=color_fuente, wrap="word")
         self.__campo_comentarios.grid(
             row=3, column=0, sticky="nsew", padx=10, pady=(1, 10))
+        fuente = (fuente[0], fuente[1], "bold")
+        tkinter.Label(self.__marco, text="Comentarios:",
+                      font=fuente, fg=color_fuente).grid(
+            row=2, column=0, sticky="w", padx=20, pady=(10, 1))
 
         # Asociamos el evento de pérdida de foco a guardar el texto que haya en
         # ese momento en el campo.

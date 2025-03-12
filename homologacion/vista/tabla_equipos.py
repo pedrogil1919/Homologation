@@ -190,7 +190,7 @@ class TablaEquipos(object):
         # Antes de cambiar de estado, preguntamos al usuario.
         if tkinter.messagebox.askokcancel(
                 "Registrar equipo",
-                "Cambiar el estado de registro del equipo %s (%s)" %
+                "¿Cambiar el estado de registro del equipo %s (%s)?" %
                 (nombre, equipo)):
             try:
                 self.__conexion.registrar_equipo(fila)
