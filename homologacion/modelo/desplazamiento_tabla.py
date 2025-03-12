@@ -54,6 +54,9 @@ class Desplazamiento(object):
             elif event.num == 5:
                 self.__canvas.yview_scroll(1, "units")  # Scroll down
 
+    def __get_desp_vertical(self):
+        return self.__desp_vertical
+
     def __set_desp_vertical(self, habilitar):
         """
         Configuración global
@@ -112,4 +115,5 @@ class Desplazamiento(object):
             # Mostramos la barra de desplazamiento
             self.__barra.grid(row=0, column=1, sticky="ns")
 
-    desp_vertical = property(None, __set_desp_vertical, None, None)
+    desp_vertical = property(
+        __get_desp_vertical, __set_desp_vertical, None, None)
