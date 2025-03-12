@@ -2,7 +2,7 @@
 Created on 14 feb 2025
 
 Módulo para construir la página donde nos aparecerán todos los puntos de
-homologación, en función de la zona y el equipo.
+homologación, en función de la zona y el equipo, y el campo comentario
 
 @author: pedrogil
 '''
@@ -38,7 +38,9 @@ class Pagina(object):
           llamante, ya que inicialmente, esta página está pensada para bloquear
           al módulo llamante mientras no la cerremos. Esta función es llamada
           justo al finalizar la edición de esta página. Si el módulo llamante
-          no se bloquea, se puede pasar None
+          no se bloquea, se puede pasar None. La función debe devolver True si
+          se sigue adelante con el desbloqueo, o False si no (por ejemplo, por
+          que el usuario ha cancelado la operación).
         - color_punto: función que devuelve el color de un punto en función de
           su valor. Toma como argumento dos enteros, el valor del punto, y el
           nivel de sección, y devuelve un color de tkinter.
@@ -97,26 +99,28 @@ class Pagina(object):
             row=2, column=0, sticky="w", padx=10, pady=(10, 1))
         self.__campo_comentarios = tkinter.Text(
             self.__marco, height=4, wrap="word")
-
         self.__campo_comentarios.grid(
             row=3, column=0, sticky="nsew", padx=10, pady=(1, 10))
 
-        # Asociamos el evento de pérdida de foco a guardar el texto que se haya
-        # introducido en el campo.
+        # Asociamos el evento de pérdida de foco a guardar el texto que haya en
+        # ese momento en el campo.
         self.__campo_comentarios.bind(
             "<FocusOut>", self.__guardar_comentario)
         # Asociamos la tecla enter del tecldo interno y externo a perder el
-        # foco, de tal forma que provoca la ejecución del código anterior.
-        self.__campo_comentarios.bind(
-            "<Return>", self.__campo_perder_foco)
-        self.__campo_comentarios.bind(
-            "<KP_Enter>", self.__campo_perder_foco)
+        # foco, de tal forma que provoca la ejecución del código anterior, y da
+        # el foco al botón de guardar.
+        self.__campo_comentarios.bind("<Return>", self.__campo_perder_foco)
+        self.__campo_comentarios.bind("<KP_Enter>", self.__campo_perder_foco)
         # A asociamos la tecla Tab también a perder el foco, evitando que se
-        # introduzca un tabulador en el texto.
-        self.__campo_comentarios.bind(
-            "<Tab>", self.__campo_perder_foco)
+        # introduzca un tabulador en el texto. Esto permite utilizar la tecla
+        # Tab para altarnar entre los 2 botones y el campo de comentarios.
+        self.__campo_comentarios.bind("<Tab>", self.__campo_perder_foco)
+        # Aprovechamos cuando el campo de comentarios coja el foco para anular
+        # el desplazamiento de los puntos, y así podemos hacer scrollo sobre el
+        # campo de texto.
+        self.__campo_comentarios.bind("<FocusIn>", self.__campo_ganar_foco)
 
-        # Iniciamos el campo con el texto que tuviera ya el campo.
+        # Iniciamos el campo con el texto que tuviera ya el campo en la bd.
         if comentario is not None:
             self.__campo_comentarios.insert("1.0", comentario)
 
@@ -125,31 +129,34 @@ class Pagina(object):
         botones.grid(row=4, column=0, sticky="nsew")
 
         # Creamos los dos botones. Aquí es importante crear el botón de guardar
-        # el primero, para que la secuencia del Tab de el foco primero al de
+        # el primero, para que la secuencia del Tab de el foco primero al botón
         # guardar, ya que si da primero al de cancelar, puede dar lugar a
-        # equivocaciones al usuario.
-        b2 = tkinter.Button(botones, text="Guardar", command=self.__guardar)
-        b1 = tkinter.Button(botones, text="Cancelar", command=self.__cancelar)
+        # confusiones al usuario.
+        self.__boton_guardar = tkinter.Button(
+            botones, text="Guardar", command=self.__guardar)
+        self.__boton_cancelar = tkinter.Button(
+            botones, text="Cancelar", command=self.__cancelar)
 
-        b1.pack(side=tkinter.RIGHT, padx=10, pady=10)
-        b2.pack(side=tkinter.RIGHT, padx=10, pady=10)
+        self.__boton_cancelar.pack(side=tkinter.RIGHT, padx=10, pady=10)
+        self.__boton_guardar.pack(side=tkinter.RIGHT, padx=10, pady=10)
 
-        b1.bind("<Return>", self.__cancelar)
-        b2.bind("<Return>", self.__guardar)
-        b1.bind("<KP_Enter>", self.__cancelar)
-        b2.bind("<KP_Enter>", self.__guardar)
-        b2.focus_set()
+        self.__boton_cancelar.bind("<Return>", self.__cancelar)
+        self.__boton_guardar.bind("<Return>", self.__guardar)
+        self.__boton_cancelar.bind("<KP_Enter>", self.__cancelar)
+        self.__boton_guardar.bind("<KP_Enter>", self.__guardar)
+        self.__boton_guardar.focus_set()
 
         ########################################################################
         ########################################################################
         # Ajustamos para que todo el espacio sobrante lo ocupe el marco que
         # mostrará los puntos de homologación.
-        self.__marco.columnconfigure(index=0, weight=1)
         self.__marco.rowconfigure(index=0, weight=0)
         self.__marco.rowconfigure(index=1, weight=1)
         self.__marco.rowconfigure(index=2, weight=0)
         self.__marco.rowconfigure(index=3, weight=0)
         self.__marco.rowconfigure(index=4, weight=0)
+        # Y se ocupe toda el espacio en horizontal.
+        self.__marco.columnconfigure(index=0, weight=1)
 
         ########################################################################
         ########################################################################
@@ -285,7 +292,7 @@ class Pagina(object):
         # NOTA: Si el usuario pulsa Guardar sin hacer que el campo de
         # comentarios pierda el foco, es posible que no se haya guardado los
         # comentarios.
-        self.__guardar_comentario()
+        self.__boton_guardar.focus_set()
         self.__conexion.guardar()
         for control in self.__marco.winfo_children():
             control.destroy()
@@ -306,14 +313,20 @@ class Pagina(object):
         for control in self.__marco.winfo_children():
             control.destroy()
 
+    def __campo_ganar_foco(self, evento=None):
+        # Anulamos el desplazamiento vertical de la tabla de puntos, para
+        # poder hacer scroll sobre el propio campo.
+
+        self.__vertical.desp_vertical = False
+
     def __campo_perder_foco(self, evento=None):
         """
         Guardar comentario cuando el campo pierde el foco.
 
         """
-        siguiente = evento.widget.tk_focusNext()
-        if siguiente:
-            siguiente.focus_set()
+        # Devolvemos el desplazamiento vertical a la tabla de puntos.
+        self.__vertical.desp_vertical = True
+        self.__boton_guardar.focus_set()
         # Con esta instrucción, evitamos que si hemos llegado aquí al
         # haber pulsado la tecla Tab, se incluya un tabulador en el texto.
         return "break"
@@ -323,6 +336,7 @@ class Pagina(object):
         Guardar los comentarios en la base de datos.
 
         """
+        print("Guardar")
         comentario = self.__campo_comentarios.get("1.0", "end-1c")
         self.__conexion.actualizar_comentario(
             self.__equipo, self.__zona, comentario)
@@ -436,6 +450,16 @@ class Pagina(object):
         Alterna el valor de un punto de homologación entre True y False 
 
         """
+        # En caso de que hayamos perdido el desplazamiento vertical de la
+        # tabla de puntos, ddams el foco de nuevo al botón de guardar. De esta
+        # forma, se ejecuta el código para habilitar el desplazamiento a la
+        # tabla de puntos, y se guarda cualquier modificación del comentario.
+        # Además, al dar el foco al botón, ya no se volverá a deshabilitar el
+        # desplazamiento hasta que no se vuelva a entrar al campo de
+        # comentarios.
+        if not self.__vertical.desp_vertical:
+            self.__boton_guardar.focus_set()
+
         # Alternamos el valor del punto de homologación.
         try:
             valor = self.__conexion.actualizar_punto_homologacion(
