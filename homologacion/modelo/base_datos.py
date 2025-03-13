@@ -51,6 +51,17 @@ class Conexion():
             "SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
 
         cursor_bloqueo.execute("SET SESSION innodb_lock_wait_timeout = 5")
+
+        # Comprobamos que la tabla Homologacion_EstadoEquipo tenga todos los
+        # equipos que están incluidos en la tabla Equipo de la bd de
+        # administración.
+        cursor_equipos = self.__conexion.cursor()
+        cursor_equipos.execute(
+            "INSERT INTO Homologacion_EstadoEquipo(FK_EQUIPO) "
+            "SELECT ID_EQUIPO FROM eurobot_administracion.Equipo "
+            "WHERE NOT EXISTS "
+            "(SELECT FK_EQUIPO FROM Homologacion_EstadoEquipo)")
+
         # Guardamos los datos en el objeto.
         self.__user = user
         self.__host = host
@@ -80,7 +91,7 @@ class Conexion():
         consulta = "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
             format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
         if equipo is not None:
-            consulta += " AND ID_EQUIPO = %i" % equipo
+            consulta += " AND FK_EQUIPO = %i" % equipo
         cursor.execute(consulta)
         equipos = cursor.fetchall()
         return equipos
@@ -97,7 +108,7 @@ class Conexion():
         cursor = self.__conexion.cursor(dictionary=True, prepared=False)
         consulta = "SELECT * FROM Homologacion_EstadoEquipos"
         if equipo is not None:
-            consulta += " WHERE ID_EQUIPO = %i" % equipo
+            consulta += " WHERE FK_EQUIPO = %i" % equipo
         cursor.execute(consulta)
         equipos = cursor.fetchall()
         return equipos
@@ -115,7 +126,7 @@ class Conexion():
         # Obtenemos el dorsal del equipo a partir de la fila en la tabla.
         cursor_dorsal = self.__conexion.cursor(prepared=True)
         cursor_dorsal.execute(
-            "SELECT ID_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
+            "SELECT FK_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
         if cursor_dorsal.rowcount != 1:
             raise RuntimeError("Error en función de cambio de estado.")
         dorsal = cursor_dorsal.fetchone()[0]
@@ -127,8 +138,8 @@ class Conexion():
         cursor_bloqueo = self.__conexion.cursor(prepared=True)
         try:
             cursor_bloqueo.execute(
-                "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE NOWAIT",
-                (dorsal,))
+                "SELECT * FROM Homologacion_ListaEquipos WHERE ID_EQUIPO = %s "
+                "FOR UPDATE NOWAIT", (dorsal,))
         except mariadb.OperationalError as e:
             # Detectamos si el equipo se encuentra bloqueado por otro usuario.
             if e.errno == 1205:
@@ -138,7 +149,7 @@ class Conexion():
 
         cursor_equipo = self.__conexion.cursor(prepared=True)
         cursor_equipo.execute(
-            "UPDATE Equipo SET registrado=%s WHERE ID_EQUIPO=%s",
+            "UPDATE Homologacion_EstadoEquipo SET registrado=%s WHERE FK_EQUIPO=%s",
             (estado_nuevo, dorsal))
         if cursor_equipo.affected_rows != 1:
             raise RuntimeError("Error en función de cambio de estado.")
@@ -153,13 +164,14 @@ class Conexion():
         cursor_estado = self.__conexion.cursor(prepared=True)
         # Obtenemos el dorsal del equipo.
         cursor_dorsal.execute(
-            "SELECT ID_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
+            "SELECT FK_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
         if cursor_dorsal.rowcount != 1:
             raise RuntimeError("Error en función de cambio de estado.")
         dorsal = cursor_dorsal.fetchone()[0]
         # Determinamos el estado de registro del equipo, para alternarlo.
         cursor_estado.execute(
-            "SELECT registrado FROM Equipo WHERE ID_EQUIPO = %s", (dorsal,))
+            "SELECT registrado FROM Homologacion_ListaEquipos "
+            "WHERE FK_EQUIPO = %s", (dorsal,))
         if cursor_estado.rowcount != 1:
             raise RuntimeError("Error en función de cambio de estado.")
         estado_actual = cursor_estado.fetchone()[0]
@@ -172,7 +184,7 @@ class Conexion():
         """
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor.execute(
-            "SELECT ID_EQUIPO, equipo FROM Homologacion_ListaEquipos WHERE ORDEN = %s",
+            "SELECT FK_EQUIPO, equipo FROM Homologacion_ListaEquipos WHERE ORDEN = %s",
             (fila,))
 
         nombre = cursor.fetchone()
@@ -279,8 +291,8 @@ class Conexion():
         cursor_puntos = self.__conexion.cursor(prepared=True)
         try:
             cursor_equipo.execute(
-                "SELECT * FROM Equipo WHERE ID_EQUIPO = %s FOR UPDATE NOWAIT",
-                (equipo,))
+                "SELECT * FROM Homologacion_ListaEquipos WHERE ID_EQUIPO = %s "
+                "FOR UPDATE NOWAIT", (equipo,))
             cursor_puntos.execute(
                 "SELECT * FROM Homologacion_ListaPuntos WHERE FK_EQUIPO = %s "
                 "FOR UPDATE NOWAIT", (equipo,))
