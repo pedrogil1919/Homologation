@@ -202,7 +202,7 @@ class Pagina(object):
 
         # Iteramos sobre todos los puntos de hommologación (ver definición del
         # generador __lis_puntos para más detalles).
-        for elemento, fila, descendientes in self.__lista_puntos(lista_puntos):
+        for elemento, fila, descendientes, numero in self.__lista_puntos(lista_puntos):
             # Obtenemos los datos del registro de la base de datos
             # correspondiente a este punto.
             punto = elemento["FK_HOMOLOGACION_PUNTO"]
@@ -240,7 +240,7 @@ class Pagina(object):
             etiqueta = Etiqueta(
                 self.__pagina, punto, fila, nivel, seccion, valor,
                 lista_etiquetas_desc,
-                text=elemento["descripcion"],
+                text="%s-%s" % (numero, elemento["descripcion"]),
                 font=fuente, fg=color_fuente,
                 anchor="w", justify=tkinter.LEFT, pady=margen_y, padx=margen_x)
             # Actualizamos la apariencia de la etiqueta en función de su valor.
@@ -358,6 +358,7 @@ class Pagina(object):
         - registro de la vista de la base de datos
         - numero de orden (ver nota debajo)
         - registros de niveles inferiores que son dependientes de éste (sección)
+        - numeración de la sección, subsección, etc, del tipo 1.1.2
 
         """
         # Convertimos la lista de puntos, en un diccionario de listas de puntos,
@@ -385,7 +386,7 @@ class Pagina(object):
         # se hace en este punto.
         yield from self.__lista_puntos_jerarquico(lista_aux, 1)
 
-    def __lista_puntos_jerarquico(self, listas, indice, seccion=None):
+    def __lista_puntos_jerarquico(self, listas, indice, prefijo="", seccion=None):
         """
         Generador recursivo, para devolver el orden de cada punto.
 
@@ -405,11 +406,16 @@ class Pagina(object):
         - listas: ver arriba
         - indice: número de orden actual, para poder numerar cada punto con su
           número de orden correcto.
+        - prefijo: valor actual del número de sección, como una cadena de texto,
+          a la cual se le añade el número de la subsección correspondiente.
         - seccion: cuando estamos recorriendo todos los elementos de una
           sección, este argumento nos vale para saber si este punto pertenece
           a esta sección o no.
 
         """
+        # Variable para llevar la numeración de la subsección en la que nos
+        # encontramos.
+        orden = 1
         # Recorremos todos los elementos de la lista actual.
         for elemento in listas[0]:
             # Comprobamos si este punto pertenece a la sección que estamos
@@ -417,6 +423,9 @@ class Pagina(object):
             # un mismo nivel para todas las secciones existentes.
             # Seccion None sólo ocurre para los puntos de primer nivel.
             if seccion is None or elemento["FK_HOMOLOGACION_SECCION"] == seccion:
+                # Componemos el número de la sección, añadiendo el número de
+                # subsección al prefijo de la sección que lo contiene.
+                numero = "%s%s." % (prefijo, orden)
                 # La variable ultimo nos permite saber cual es el último indice
                 # asignado, para poder numerar los siguientes puntos a partir
                 # de este.
@@ -428,12 +437,13 @@ class Pagina(object):
                 if elemento["seccion"] == 0:
                     # Recorremos todos los puntos del siguiente nivel, para
                     # comprobar cuales pertenecen a esta sección.
-                    for e, i, h in self.__lista_puntos_jerarquico(
-                            listas[1:], indice + 1,
+                    for e, i, h, n in self.__lista_puntos_jerarquico(
+                            listas[1:], indice + 1, numero,
                             elemento["FK_HOMOLOGACION_PUNTO"]):
                         # Devolvemos el elemento, el índice y la lista de
                         # descendientes de este punto.
-                        yield e, i, h
+                        # Generamos el texto para el número de sección.
+                        yield e, i, h, n
                         # Y añadimos el nuevo elemento a la lista de
                         # descendientes de esta sección.
                         desc += [i]
@@ -442,8 +452,8 @@ class Pagina(object):
                         # numerar a continuación de éste.
                         if i > ultimo:
                             ultimo = i
-                # Por último, devolvemos el elemento padre de todos.
-                yield elemento, indice, desc
+                yield elemento, indice, desc, numero
+                orden += 1
                 # Y avanzamos el índice tantas unidades como puntos hayamos
                 # devuelto para esta sección.
                 indice = ultimo + 1
