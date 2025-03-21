@@ -3,16 +3,17 @@
     
     <cabecera>
         <ORDEN/>
-        <ID_EQUIPO NOMBRE="DORSAL" ANCHO="120" ALINEACION="C" AJUSTE="0" ZONA="" />
-        <equipo    NOMBRE="NOMBRE" ANCHO="400" ALINEACION="L" AJUSTE="1" ZONA="0"/>
-        <Z1        NOMBRE="Z1"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="1"/>
-        <Z2        NOMBRE="Z2"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="2"/>
-        <Z3        NOMBRE="Z3"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="3"/>
+        <FK_EQUIPO   NOMBRE="DORSAL" ANCHO="120" ALINEACION="C" AJUSTE="0" ZONA="" />
+        <equipo      NOMBRE="NOMBRE" ANCHO="400" ALINEACION="L" AJUSTE="1" ZONA="0"/>
+        <competicion NOMBRE="CAT"    ANCHO= "60" ALINEACION="C" AJUSTE="1" ZONA="0"/>
+        <Z1          NOMBRE="Z1"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="1"/>
+        <Z2          NOMBRE="Z2"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="2"/>
+        <Z3          NOMBRE="Z3"     ANCHO= "40" ALINEACION="C" AJUSTE="0" ZONA="3"/>
     </cabecera>
 
 	<pagina ANCHO="400" MARGENX="10" MARGENY="5" />
 	<colores_tabla BORDE="gray40" FONDO="gray80" CABECERA="turquoise" FILAS="floral white"/>
-	<colores_puntos COLOR_SI="DarkSeaGreen1" COLOR_NO="coral1" COLOR_NP="azure2" COLOR_SC="blue"/>
+	<colores_puntos COLOR_SI="DarkSeaGreen1" COLOR_NO="coral1" COLOR_NP="azure2" COLOR_SC="light sky blue"/>
 	
     <graficos DIRECTORIO="graficos/">
         <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="1.5" />
