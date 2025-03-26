@@ -527,7 +527,8 @@ class Pagina(object):
         # NOTA: hay que tener en cuenta que el ancho de la etiqueta es igual
         # a la longitud del texto, más el margen (padx * 2).
         for control in self.__pagina.winfo_children():
-            control.config(wraplength=ancho - 2*control["padx"])
+            ancho_etiqueta = control.winfo_width()
+            control.config(wraplength=ancho_etiqueta - 2*control["padx"])
 
         # Actualizamos la página, para que se recalcule el espacio requerido
         # una vez se sepa el número de líneas que ocupa cada etiqueta.
