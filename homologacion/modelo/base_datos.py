@@ -58,7 +58,7 @@ class Conexion():
         cursor_equipos = self.__conexion.cursor()
         cursor_equipos.execute(
             "INSERT INTO Homologacion_EstadoEquipo(FK_EQUIPO) "
-            "SELECT ID_EQUIPO FROM eurobot_administracion.Equipo "
+            "SELECT ID_EQUIPO FROM VistaEquipo "
             "WHERE NOT EXISTS "
             "(SELECT FK_EQUIPO FROM Homologacion_EstadoEquipo)")
 
