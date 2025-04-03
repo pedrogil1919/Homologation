@@ -93,7 +93,7 @@ ventana_inicio.destroy()
 ################################################################################
 # Ventana principal
 ventana_principal = tkinter.Tk()
-
+ventana_principal.title("Homologación Eurobot Spain")
 # Creamos una cabecera para la aplicación.
 cabecera = tkinter.Frame(ventana_principal)
 cabecera.grid(row=0, column=0, sticky="nsew")
