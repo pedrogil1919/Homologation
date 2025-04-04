@@ -88,7 +88,7 @@ class Pagina(object):
         fuente, color_fuente = leer_fuente("pagina")
         tkinter.Label(
             self.__marco, text=cabecera, height=1, font=fuente,
-            fg=color_fuente).grid(row=0, column=0, sticky="nsew")
+            fg=color_fuente).grid(row=0, column=0, sticky="nsew", pady=5)
 
         # Otro marco donde mostrar los puntos de homologación.
         marco_canvas = tkinter.Frame(self.__marco)
@@ -339,7 +339,6 @@ class Pagina(object):
         Guardar los comentarios en la base de datos.
 
         """
-        print("Guardar")
         comentario = self.__campo_comentarios.get("1.0", "end-1c")
         self.__conexion.actualizar_comentario(
             self.__equipo, self.__zona, comentario)

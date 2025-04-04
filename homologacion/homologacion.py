@@ -9,8 +9,9 @@ import time
 from tkinter import PhotoImage
 import tkinter
 
-from leer_constantes import abrir_archivo_xml, leer_conexion, leer_ancho_pagina
+from leer_constantes import abrir_archivo_xml, leer_ancho_pagina
 from leer_constantes import leer_logos
+from leer_datos_conexion import abrir_xml_conexion, leer_conexion
 from modelo.base_datos import Conexion
 from vista.tabla_equipos import TablaEquipos
 from vista.ventana_inicio import crear_ventana_inicio
@@ -57,6 +58,7 @@ except Exception:
 # Abrir archivo xml con las constantes.
 try:
     abrir_archivo_xml(archivo_config)
+    abrir_xml_conexion("../../entrada.xml")
 except Exception as error:
     tkinter.messagebox.showerror("Archivo de configuracion", error)
     exit(1)

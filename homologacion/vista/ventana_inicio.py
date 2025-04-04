@@ -10,7 +10,8 @@ from PIL import Image, ImageTk
 import tkinter
 import screeninfo
 
-from leer_constantes import leer_ventana_inicio, leer_conexion, leer_fuente
+from leer_constantes import leer_ventana_inicio, leer_fuente
+from leer_datos_conexion import leer_conexion
 
 
 def crear_ventana_inicio():

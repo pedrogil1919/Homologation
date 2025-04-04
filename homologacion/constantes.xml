@@ -1,6 +1,4 @@
 <EurobotHomologacion>
-    <conexion HOST="localhost" BASE="eurobot_current" USER="homologador" PASS="homologador" SAVE="TRUE"></conexion>
-    
     <cabecera>
         <ORDEN/>
         <FK_EQUIPO   NOMBRE="DORSAL" ANCHO="120" ALINEACION="C" AJUSTE="0" ZONA="" />

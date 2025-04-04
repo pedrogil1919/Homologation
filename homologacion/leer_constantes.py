@@ -73,19 +73,6 @@ def abrir_archivo_xml(archivo):
 
 
 @captura_error
-def leer_conexion():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("conexion")
-    datos_conexion = {
-        "HOST": elemento.attrib["HOST"],
-        "BASE": elemento.attrib["BASE"],
-        "USER": elemento.attrib["USER"],
-        "PASS": elemento.attrib["PASS"],
-        "SAVE": (elemento.attrib["SAVE"] == "TRUE")}
-    return datos_conexion
-
-
-@captura_error
 def leer_ventana_inicio():
     raiz = archivo_xml.getroot()
     elemento = raiz.find("graficos")
