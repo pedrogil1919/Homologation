@@ -158,8 +158,10 @@ def leer_logos():
     directorio += elemento.attrib["DIRECTORIO"]
     cabecera = directorio + elemento.attrib["CABECERA"]
     logo = directorio + elemento.attrib["FONDO"]
+    icono = directorio + elemento.attrib["ICONO"]
     return {
         "CABECERA": cabecera,
+        "ICONO": icono,
         "LOGO": logo}
 
 
@@ -178,131 +180,3 @@ def leer_margen_pagina():
 
 
 ##############################################################
-"""
-
-@captura_error
-def leer_pantalla_resultado():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("resultados")
-    tiempo = [int(elemento.attrib["TIEMPO_REFRESCO"]),
-              int(elemento.attrib["TIEMPO_APAGADO"])]
-    # Comprobamos si debemos subir el resultado al servidor
-    if elemento.attrib["PNG_GUARDAR"] == "False":
-        return None, tiempo
-    datos_servidor_ftp = {
-        "PNG_HOST": elemento.attrib["PNG_HOST"],
-        "PNG_USER": elemento.attrib["PNG_USER"],
-        "PNG_DIR":  elemento.attrib["PNG_DIR"],
-        "PNG_PASS": elemento.attrib["PNG_PASS"]}
-    return datos_servidor_ftp, tiempo
-
-
-@captura_error
-def leer_iconos():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("graficos")
-    directorio = elemento.attrib["DIRECTORIO"]
-    acciones = directorio + elemento.attrib["ACCIONES"]
-    elemento = elemento.find("iconos")
-    directorio += elemento.attrib["DIRECTORIO"]
-    datos_iconos = {
-        "ICONO_CONECTAR":    elemento.attrib["ICONO_CONECTAR"],
-        "ICONO_GUARDAR":     elemento.attrib["ICONO_GUARDAR"],
-        "ICONO_FINALIZAR":   elemento.attrib["ICONO_FINALIZAR"],
-        "ICONO_DESCONECTAR": elemento.attrib["ICONO_DESCONECTAR"],
-        "ICONO_RESULTADO":   elemento.attrib["ICONO_RESULTADO"],
-        "ICONO_CERRAR":      elemento.attrib["ICONO_CERRAR"],
-        "ICONO_MARCAR":      elemento.attrib["ICONO_MARCAR"],
-        "ICONO_LUPA_MAS":    elemento.attrib["ICONO_LUPA_MAS"],
-        "ICONO_LUPA_MENOS":  elemento.attrib["ICONO_LUPA_MENOS"],
-        "ICONO_GIRAR":       elemento.attrib["ICONO_GIRAR"]}
-    return directorio, acciones, datos_iconos
-
-
-@captura_error
-def leer_logos():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("graficos")
-    directorio = elemento.attrib["DIRECTORIO"]
-    elemento = elemento.find("logos")
-    directorio += elemento.attrib["DIRECTORIO"]
-    datos_logos = {
-        "TITULO":           elemento.attrib["TITULO"],
-        "ICONO":            elemento.attrib["ICONO"],
-        "LOGO_FONDO":       elemento.attrib["LOGO_FONDO"],
-        "LOGO_CABECERA":    elemento.attrib["LOGO_CABECERA"],
-        "COLOR_LOGO_FONDO": elemento.attrib["COLOR_LOGO_FONDO"],
-        "MAPA":             elemento.attrib["MAPA"],
-        "COLOR_FONDO":      elemento.attrib["COLOR_FONDO"]}
-    return directorio, datos_logos
-
-
-@captura_error
-def leer_equipos():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("graficos")
-    directorio = elemento.attrib["DIRECTORIO"]
-    elemento = elemento.find("equipos")
-    directorio += elemento.attrib["DIRECTORIO"]
-    return directorio
-
-
-@captura_error
-def leer_atajos():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("teclado")
-    datos_atajos = {}
-    for atajo in elemento.findall("atajo"):
-        datos_atajos[int(atajo.attrib["ARBITRO"])] = atajo.attrib["ARCHIVO"]
-    return datos_atajos
-
-
-@captura_error
-def leer_escalado():
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("escalado")
-    datos_escalado = {
-        "ZOOM":     (elemento.attrib["ZOOM"] == "TRUE"),
-        "BORDE":    int(elemento.attrib["BORDE"]),
-        "BARRA":    (elemento.attrib["BARRA"] == "TRUE"),
-        "VERTICAL": (elemento.attrib["VERTICAL"] == "TRUE"),
-        "GIRAR":    (elemento.attrib["GIRAR"] == "TRUE")}
-    return datos_escalado
-
-
-################################################################################
-# FUNCIONES DE ESCRITURA DEL ARCHIVO DE CONFIGURACIÓN
-################################################################################
-
-
-def guardar_arbitros(lista_arbitros):
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("conexion")
-    datos_arbitros = elemento.findall("arbitro")
-    # Eliminar todos los registros de arbitros.
-    for arbitro in datos_arbitros:
-        elemento.remove(arbitro)
-    # Y añadir los nuevos registros.
-    for arbitro in lista_arbitros:
-        if arbitro["valor"]:
-            nuevo_arbitro = ElementTree.Element("arbitro")
-            nuevo_arbitro.set("id", str(arbitro["ID_ARBITRO"]))
-            elemento.append(nuevo_arbitro)
-    archivo_xml.write(nombre_xml)
-
-
-def guardar_campos(lista_campos):
-    raiz = archivo_xml.getroot()
-    elemento = raiz.find("conexion")
-    datos_campos = elemento.findall("campo")
-    for campo in datos_campos:
-        elemento.remove(campo)
-    # Y añadir los nuevos registros.
-    for campo in lista_campos:
-        if campo["valor"]:
-            nuevo_campo = ElementTree.Element("campo")
-            nuevo_campo.set("id", str(campo["ID_CAMPO"]))
-            elemento.append(nuevo_campo)
-    archivo_xml.write(nombre_xml)
-    
-"""

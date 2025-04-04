@@ -94,6 +94,11 @@ ventana_inicio.destroy()
 # Ventana principal
 ventana_principal = tkinter.Tk()
 ventana_principal.title("Homologación Eurobot Spain")
+# Abrimos el icono para la ventana.
+datos_logos = leer_logos()
+icono = tkinter.PhotoImage(file=datos_logos["ICONO"])
+ventana_principal.iconphoto(True, icono)
+
 # Creamos una cabecera para la aplicación.
 cabecera = tkinter.Frame(ventana_principal)
 cabecera.grid(row=0, column=0, sticky="nsew")
