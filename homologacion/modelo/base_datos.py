@@ -138,7 +138,7 @@ class Conexion():
         cursor_bloqueo = self.__conexion.cursor(prepared=True)
         try:
             cursor_bloqueo.execute(
-                "SELECT * FROM Homologacion_ListaEquipos WHERE ID_EQUIPO = %s "
+                "SELECT * FROM Homologacion_ListaEquipos WHERE FK_EQUIPO = %s "
                 "FOR UPDATE NOWAIT", (dorsal,))
         except mariadb.OperationalError as e:
             # Detectamos si el equipo se encuentra bloqueado por otro usuario.
@@ -146,6 +146,7 @@ class Conexion():
                 raise BlockingIOError(
                     "El equipo está bloqueado por otro usuario. "
                     "Espere a que termine para poder continar.")
+            else: raise e
 
         cursor_equipo = self.__conexion.cursor(prepared=True)
         cursor_equipo.execute(
@@ -291,7 +292,7 @@ class Conexion():
         cursor_puntos = self.__conexion.cursor(prepared=True)
         try:
             cursor_equipo.execute(
-                "SELECT * FROM Homologacion_ListaEquipos WHERE ID_EQUIPO = %s "
+                "SELECT * FROM Homologacion_ListaEquipos WHERE FK_EQUIPO = %s "
                 "FOR UPDATE NOWAIT", (equipo,))
             cursor_puntos.execute(
                 "SELECT * FROM Homologacion_ListaPuntos WHERE FK_EQUIPO = %s "
@@ -302,6 +303,7 @@ class Conexion():
                 raise BlockingIOError(
                     "El equipo está bloqueado por otro usuario. "
                     "Espere a que termine para poder continar.")
+            else: raise e
 
     def __abrir_transaccion(self, equipo):
         self.__conexion.autocommit = False
