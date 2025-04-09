@@ -84,7 +84,7 @@ except Exception:
 # Abrir archivo xml con las constantes.
 try:
     abrir_archivo_xml(archivo_config)
-    abrir_xml_conexion("../../entrada.xml")
+    abrir_xml_conexion("../entrada.xml")
 except Exception as error:
     tkinter.messagebox.showerror("Archivo de configuracion", error)
     exit(1)
