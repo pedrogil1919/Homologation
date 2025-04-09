@@ -16,6 +16,32 @@ from modelo.base_datos import Conexion
 from vista.tabla_equipos import TablaEquipos
 from vista.ventana_inicio import crear_ventana_inicio
 
+class CapturarError:
+    """
+    Copiado de tkinter.CallWrapper
+
+    Añadido para poder sacar un mensaje al usuario y poder terminar la
+    aplicación en caso de excepción inesperada. Esto altera el funcionamiento
+    normal de gestión de excepciones, que imprime el mensaje en la consola pero
+    no finaliza la aplicación, por lo que es complicado darse cuenta del error,
+    sobre todo si tenemos la ventana principal encima de la consola.
+
+    """
+
+    def __init__(self, func, subst, widget):
+        self.func = func
+        self.subst = subst
+        self.widget = widget
+
+    def __call__(self, *args):
+        """Apply first function SUBST to arguments, than FUNC."""
+        try:
+            if self.subst:
+                args = self.subst(*args)
+            return self.func(*args)
+        except Exception:
+            self.widget._report_exception()
+            raise
 
 def cerrar_aplicacion(__=None):
     """
@@ -95,6 +121,14 @@ ventana_inicio.destroy()
 ################################################################################
 # Ventana principal
 ventana_principal = tkinter.Tk()
+
+# Captura de errores dentro de la interfaz gráfica. (ver comentario justo antes
+#   del mainloop). La función CapturarError está definida en el módulo errores.
+# IMPORTANTE: Esta llamada tiene que estar definida antes de crear ningún
+# control de la ventana, si se hace después, no atenderá a los errores
+# producidos en dichos controles.
+tkinter.CallWrapper = CapturarError
+
 ventana_principal.title("Homologación Eurobot Spain")
 # Abrimos el icono para la ventana.
 datos_logos = leer_logos()
@@ -171,4 +205,7 @@ ventana_principal.protocol("WM_DELETE_WINDOW", cerrar_aplicacion)
 # Activamos el temporizador.
 temporizador_refrescar()
 
-ventana_principal.mainloop()
+try:
+    ventana_principal.mainloop()
+except Exception as e:
+    tkinter.messagebox.showerror("Error", "%s. Se cerrará la aplicación." % e)
