@@ -48,7 +48,7 @@ class TablaEquipos(object):
         - marco: marco de tkinter donde se construirá toda la interfaz gráfica
         - conexion.
         - puntos: marco auxiliar donde se mostrarán los puntos de homologacion.
-        - etiqueta_fondo: etiqueta con el fondo a mostrar en el area de puntos
+        - fondo: etiqueta con el fondo a mostrar en el area de puntos
           cuando no se está visualizando los puntos de homologación.
 
         '''
@@ -56,6 +56,7 @@ class TablaEquipos(object):
         self.__conexion = conexion
         # Guardamos el marco donde se mostrarán los puntos de homologación.
         self.__puntos = puntos
+        # y el fondo, para cuando no se estén mostrando puntos.
         self.__fondo = fondo
 
         # Creamos una cabecera para incluir los botones de cambio de pestaña.
@@ -70,6 +71,7 @@ class TablaEquipos(object):
         marco.rowconfigure(index=1, weight=1)
         marco.columnconfigure(index=0, weight=1)
 
+        # Variable para gestionar los radiobutton
         self.variable = tkinter.IntVar()
         self.variable.set(1)
         # Sobre la cabecera añadimos botones para cambiar entre los distintos
