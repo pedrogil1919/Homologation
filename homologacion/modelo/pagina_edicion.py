@@ -271,6 +271,12 @@ class Pagina(object):
         # no coge en la ventana.
         self.__vertical = Desplazamiento(
             self.__canvas, self.__pagina, self.__barra)
+        
+        # Antes de finalizar, actualizamos el tamaño del marco donde
+        # aparecerán las etiquetas, para conseguir que su tamaño sea igual al
+        # requerido por todas las etiquetas (o bien el scroll sea adecuado al
+        # tamaño total).
+        self.__actualizar_tamaño()
 
 ################################################################################
 ################################################################################
@@ -511,11 +517,6 @@ class Pagina(object):
         r = self.__canvas.bbox("frame")
         self.__canvas.configure(scrollregion=(1, 1, r[2], r[3]))
 
-        # Ajustamos la altura del marco que contiene las etiquetas para
-        # adaptarnos al número de etiquetas visibles en este momento.
-        altura = self.__pagina.winfo_reqheight()
-        self.__canvas.itemconfig('frame', height=altura)
-
         # Ajustamos el ancho del frame que contiene las etiquetas al mismo
         # ancho que el canvas que lo contiene.
         ancho = self.__canvas.winfo_width()
@@ -532,6 +533,11 @@ class Pagina(object):
         # Actualizamos la página, para que se recalcule el espacio requerido
         # una vez se sepa el número de líneas que ocupa cada etiqueta.
         self.__pagina.update_idletasks()
+        # Ajustamos la altura del marco que contiene las etiquetas para
+        # adaptarnos al número de etiquetas visibles en este momento.
+        altura = self.__pagina.winfo_reqheight()
+        self.__canvas.itemconfig('frame', height=altura)
+
         # Comprobamos si debemos habilitar o no las funciones de desplazamiento
         # vetical de la página.
         self.__vertical.desp_vertical = True
