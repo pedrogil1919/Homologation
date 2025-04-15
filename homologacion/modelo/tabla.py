@@ -358,7 +358,8 @@ class Tabla(object):
         for columna in etiquetas:
             etiqueta = etiquetas[columna]
             # Asignamos el texto de la celda.
-            etiqueta.config(text=valores[columna])
+            valor = valores[columna]
+            etiqueta.config(text=valor if valor is not None else "")
             # y su color, en fucnión del valor.
             self.__color_celda(fila, columna, etiqueta)
 
