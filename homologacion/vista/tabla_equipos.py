@@ -130,9 +130,10 @@ class TablaEquipos(object):
         def color_zona(fila, columna, valor):
             " Función para definir el color de las zonas de hommologación."
             try:
-                return self.__colores["COLOR_SI"] if int(valor) == 0 else self.__colores["COLOR_NO"]
+                color = self.__colores["COLOR_SI"] if int(valor) == 0 else self.__colores["COLOR_NO"]
             except ValueError:
-                return self.__colores["COLOR_NP"]
+                color = self.__colores["COLOR_NP"]
+            return color, False
 
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre qué columnas se deben ejecutar los eventos
@@ -344,11 +345,11 @@ class TablaEquipos(object):
         datos_equipo = self.__temp_estado[fila]
         estado_equipo = datos_equipo["estado"]
         if estado_equipo == "I":
-            return self.__colores["COLOR_NP"]
+            return self.__colores["COLOR_NP"], False
         elif estado_equipo == "R":
-            return self.__colores["COLOR_NO"]
+            return self.__colores["COLOR_NO"], False
         elif estado_equipo == "H":
-            return self.__colores["COLOR_SI"]
+            return self.__colores["COLOR_SI"], False
         else:
             raise ValueError("Vista ListaEstadosEquipos incorrecta")
 

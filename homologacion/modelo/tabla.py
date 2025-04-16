@@ -495,10 +495,11 @@ class Tabla(object):
             # Comprobamos si tenemos una función para calcular el color de
             # la celda
             try:
-                color = funcion(fila, columna, etiqueta["text"])
+                color, fila_completa = funcion(fila, columna, etiqueta["text"])
             except ValueError:
                 color = color_defecto
-
+            # TODO: fila_completa indica que hay que pintar de ese color toda la
+            # fila, no solo la celda.
         etiqueta.config(bg=color)
 
     def __get_ancho_tabla(self):

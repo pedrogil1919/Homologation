@@ -71,7 +71,7 @@ def temporizador_refrescar():
     Función para refrescar los datos de la tabla de forma periódica.
 
     """
-    ventana_principal.after(500, temporizador_refrescar)
+    ventana_principal.after(10000, temporizador_refrescar)
     tabla_equipos.refrescar_tabla()
     estadisticas.config(text=conexion.resumen_equipos())
 
