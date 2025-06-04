@@ -85,14 +85,24 @@ class Conexion():
         null si el equipo no cumple las condiciones del estado.
 
         """
-        cursor = self.__conexion.cursor(dictionary=False, prepared=False)
+#            SELECT ROW_NUMBER() OVER (ORDER BY FK_EQUIPO ASC) AS ORDEN,
+
+        cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         filtro_registrado = ESTADO[estado][0]
         filtro_homologado = ESTADO[estado][1]
-        consulta = "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN (%s) AND homologado IN (%s)" % (
-            format(", ".join(map(str, filtro_registrado))), format(", ".join(map(str, filtro_homologado))))
-        if equipo is not None:
-            consulta += " AND FK_EQUIPO = %i" % equipo
-        cursor.execute(consulta)
+        if equipo is None:
+            cursor.execute(
+                "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN " +
+                self.cadena_lista(filtro_registrado) +
+                " AND homologado IN " + self.cadena_lista(filtro_homologado),
+                filtro_registrado + filtro_homologado)
+        else:
+            cursor.execute(
+                "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN " +
+                self.cadena_lista(filtro_registrado) +
+                " AND homologado IN " + self.cadena_lista(filtro_homologado) +
+                " AND FK_EQUIPO = %s",
+                filtro_registrado + filtro_homologado + (equipo,))
         equipos = cursor.fetchall()
         return equipos
 
@@ -330,6 +340,16 @@ class Conexion():
         cursor.execute("SHOW COLUMNS FROM Homologacion_ListaEquipos")
         columnas = cursor.fetchall()
         return columnas
+
+    @staticmethod
+    def cadena_lista(lista):
+        """
+        Devuelve la cadena necesaria para realizar la instrucción WHERE IN de
+        una consulta.
+
+        """
+        cadena = "(%s" + ", %s"*(len(lista)-1) + ")"
+        return cadena
 
 ################################################################################
 ################################################################################
