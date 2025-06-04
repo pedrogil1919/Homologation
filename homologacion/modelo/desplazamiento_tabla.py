@@ -44,7 +44,7 @@ class Desplazamiento(object):
         Desplazamiento con el ratón.
 
         """
-        if sys.platform == "Windows":  # Windows
+        if sys.platform == "win32":  # Windows
             self.__canvas.yview_scroll(-int(event.delta / 120), "units")
         elif sys.platform == "Darwin":  # macOS
             self.__canvas.yview_scroll(-int(event.delta), "units")
