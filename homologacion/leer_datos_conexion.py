@@ -40,5 +40,6 @@ def leer_conexion():
         "HOST": elemento.attrib["HOST"],
         "BASE": elemento.attrib["BASE"],
         "USER": elemento.attrib["USER"],
-        "PASS": elemento.attrib["PASS"]}
+        "PASS": elemento.attrib["PASS"],
+        "TIME": int(elemento.attrib["TIMEOUT"])}
     return datos_conexion

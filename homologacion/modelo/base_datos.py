@@ -28,7 +28,7 @@ ESTADO = {
 
 class Conexion():
 
-    def __init__(self, user, password, host, database):
+    def __init__(self, user, password, host, database, timeout):
         """
         Conectar a la base de datos
 
@@ -41,7 +41,7 @@ class Conexion():
                 host=host,
                 database=database,
                 autocommit=True,
-                connect_timeout=10)
+                connect_timeout=timeout)
         except mariadb.OperationalError as error:
             raise ValueError("No es posible la conexión con %s(%s). %s",
                              (database, host, error))

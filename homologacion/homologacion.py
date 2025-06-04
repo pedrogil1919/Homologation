@@ -16,6 +16,7 @@ from modelo.base_datos import Conexion
 from vista.tabla_equipos import TablaEquipos
 from vista.ventana_inicio import crear_ventana_inicio
 
+
 class CapturarError:
     """
     Copiado de tkinter.CallWrapper
@@ -42,6 +43,7 @@ class CapturarError:
         except Exception:
             self.widget._report_exception()
             raise
+
 
 def cerrar_aplicacion(__=None):
     """
@@ -100,7 +102,8 @@ try:
         conexion["USER"],
         conexion["PASS"],
         conexion["HOST"],
-        conexion["BASE"])
+        conexion["BASE"],
+        conexion["TIME"])
 except ValueError as error:
     ventana_inicio.destroy()
     tkinter.messagebox.showerror(
