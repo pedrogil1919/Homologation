@@ -19,7 +19,7 @@ from modelo.etiqueta_punto import Etiqueta
 
 class Pagina(object):
 
-    def __init__(self, marco, conexion, fila, zona,
+    def __init__(self, marco, conexion, fila, orden, zona,
                  desbloquear, color_punto, color_borde="black",
                  margen_x=10, margen_y=5, indentacion=10):
         """
@@ -33,6 +33,8 @@ class Pagina(object):
         - marco: Frame de tkinter donde construir la página
         - conexion
         - fila: índice del equipo que estamos editando.
+        - orden: Criterio de ordenación de la tabla de equipos, para poder
+          relacionar la fila con el equipo.
         - zona: zona de homologación que estamos editando.
         - desbloquear: Función, si es necesaria, para desbloquear al módulo
           llamante, ya que inicialmente, esta página está pensada para bloquear
@@ -72,7 +74,7 @@ class Pagina(object):
         ########################################################################
 
         # Obtenemos el nombre y el dorsal del equipo.
-        self.__dorsal, nombre = conexion.datos_equipo(fila)
+        self.__dorsal, nombre = conexion.datos_equipo(fila, orden)
 
         # Obtenemos la lista de puntos a homologar, y los comentarios.
         # NOTA: realizamos la consulta en este punto, antes de construir la
