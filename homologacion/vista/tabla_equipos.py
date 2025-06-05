@@ -186,18 +186,18 @@ class TablaEquipos(object):
                 "antes de editar otro equipo.")
             return
         # Obtenemos el nombre del equipo para mostrarselo al usuario.
-        equipo, nombre = self.__conexion.datos_equipo(fila)
+        dorsal, equipo = self.__conexion.datos_equipo(fila)
         # Antes de cambiar de estado, preguntamos al usuario.
         if tkinter.messagebox.askokcancel(
                 "Registrar equipo",
                 "¿Cambiar el estado de registro del equipo %s (%s)?" %
-                (nombre, equipo)):
+                (equipo, dorsal)):
             try:
-                self.__conexion.registrar_equipo(fila)
+                self.__conexion.registrar_equipo(dorsal)
             except BlockingIOError as e:
                 tkinter.messagebox.showerror(
                     "Error edición equipo", e)
-            self.refrescar_tabla(equipo)
+            self.refrescar_tabla(dorsal)
 
     # Funciones de atención a los eventos de edición de zona de homologación.
     # Se implementa como un decorator, de tal forma que con una única función
@@ -225,7 +225,10 @@ class TablaEquipos(object):
             return
 
         # Si el equipo no está registrado, no podemos homologarlo todavía.
-        if self.__conexion.estado_equipo(fila) == 0:
+        # En primer lugar, obtenemos el dorsal del equipo a partir de la fila en
+        # la que se encuentra.
+        dorsal, __ = self.__conexion.datos_equipo(fila)
+        if self.__conexion.estado_equipo(dorsal) == 0:
             return
         # Función para definir el color de la etiqueta de la página.
 
@@ -255,7 +258,7 @@ class TablaEquipos(object):
             self.__tabla_equipos.desp_vertical = False
             self.__bloquear_pestañas()
 
-    def refrescar_tabla(self, equipo=None):
+    def refrescar_tabla(self, dorsal=None):
         """
         Refresca los datos de la tabla.
 
@@ -264,7 +267,7 @@ class TablaEquipos(object):
 
         """
         # Obtenemos los datos para la tabla,
-        lista = self.__conexion.lista_equipos(self.__estado_tabla, equipo)
+        lista = self.__conexion.lista_equipos(self.__estado_tabla, dorsal)
         # NOTA: Si equipo no es None, es decir, requerimos la información de
         # un equipo, pero la base de datos no nos devuelve ningún registro,
         # significa que éste ha cambiado de estado y no supera el filtro de la
@@ -272,12 +275,12 @@ class TablaEquipos(object):
         # y ponemos equipo a None para que entre en el código correcto del if.
         if len(lista) == 0:
             lista = self.__conexion.lista_equipos(self.__estado_tabla)
-            equipo = None
+            dorsal = None
         # Formateamos los datos para mostrarlos en la tabla.
         lista = Tabla.formatear_lista_tabla(lista)
         # Obtenemos el estado de cada equipo, para que la función de determinar
         # el color de la celda funcione correctamente.
-        lista_estados = self.__conexion.lista_estado_equipos(equipo)
+        lista_estados = self.__conexion.lista_estado_equipos(dorsal)
         # Para ello generamos una variable temporal que será accedida por la
         # función de cálculo del color de la celda con el nombre del equipo.
         self.__temp_estado = {}
@@ -285,7 +288,7 @@ class TablaEquipos(object):
             self.__temp_estado[estado["ORDEN"]] = estado
         # Determinamos si es necesario refrescar toda la tabla, o sólo la
         # información del equipo actual.
-        if equipo is None:
+        if dorsal is None:
             # Si hay que refrescar toda la tabla, hacemos la llamada normal.
             self.__tabla_equipos.refrescar(lista)
         else:
@@ -339,16 +342,16 @@ class TablaEquipos(object):
         # La función necesita la variable __temp_estado, por lo que es
         # necesario asegurarse que esta variable existe antes de poder
         # utilizarla.
-        datos_equipo = self.__temp_estado[fila]
-        estado_equipo = datos_equipo["estado"]
-        if estado_equipo == "I":
+        try:
+            datos_equipo = self.__temp_estado[fila]
+        except KeyError:
+            return
+        if not datos_equipo["registrado"]:
             return self.__colores["COLOR_NP"]
-        elif estado_equipo == "R":
+        elif not datos_equipo["homologado"]:
             return self.__colores["COLOR_NO"]
-        elif estado_equipo == "H":
-            return self.__colores["COLOR_SI"]
         else:
-            raise ValueError("Vista ListaEstadosEquipos incorrecta")
+            return self.__colores["COLOR_SI"]
 
     @staticmethod
     def __configuracion_columnas(columnas, configuracion):

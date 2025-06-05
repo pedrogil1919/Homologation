@@ -72,19 +72,19 @@ class Pagina(object):
         ########################################################################
 
         # Obtenemos el nombre y el dorsal del equipo.
-        self.__equipo, nombre = conexion.datos_equipo(fila)
+        self.__dorsal, nombre = conexion.datos_equipo(fila)
 
         # Obtenemos la lista de puntos a homologar, y los comentarios.
         # NOTA: realizamos la consulta en este punto, antes de construir la
         # interfaz, ya que es posible que el equipo esté bloquedo por otro
         # usuario, y no podamos continuar.
         lista_puntos, comentario = self.__conexion.lista_puntos_homologacion(
-            self.__equipo, self.__zona)
+            self.__dorsal, self.__zona)
 
         ########################################################################
         ########################################################################
         # Construimos una cabecera para incluir el nombre del equipo.
-        cabecera = "(%i) %s - Zona %s" % (self.__equipo, nombre, zona)
+        cabecera = "(%i) %s - Zona %s" % (self.__dorsal, nombre, zona)
         fuente, color_fuente = leer_fuente("pagina")
         tkinter.Label(
             self.__marco, text=cabecera, height=1, font=fuente,
@@ -341,7 +341,7 @@ class Pagina(object):
         """
         comentario = self.__campo_comentarios.get("1.0", "end-1c")
         self.__conexion.actualizar_comentario(
-            self.__equipo, self.__zona, comentario)
+            self.__dorsal, self.__zona, comentario)
 
 ################################################################################
 ################################################################################
@@ -475,7 +475,7 @@ class Pagina(object):
         # Alternamos el valor del punto de homologación.
         try:
             valor = self.__conexion.actualizar_punto_homologacion(
-                self.__equipo, punto, self.__zona)
+                self.__dorsal, punto, self.__zona)
         except mariadb.OperationalError as e:
             if e.errno == 1205:
                 # Time out:
@@ -537,6 +537,6 @@ class Pagina(object):
         self.__vertical.desp_vertical = True
 
     def get_equipo(self):
-        return self.__equipo
+        return self.__dorsal
 
     equipo = property(get_equipo, None, None, None)
