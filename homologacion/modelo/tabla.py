@@ -162,6 +162,11 @@ class Tabla(object):
         self.__canvas.create_window(
             (1, 1), window=self.__marco_tabla, anchor="nw", tags="frame")
 
+        # Creamos una lista para todos los campos de la cabecera, ya que
+        # podemos necesitarla para añadir eventos u otras cosas a dichos
+        # campos.
+        self.__cabecera = {}
+
         # Dentro de la cabecera añadimos los datos.
         for col, dato in enumerate(cabecera):
             # NOTA: En todos los casos, cada celda está formada por un marco
@@ -185,6 +190,8 @@ class Tabla(object):
                 marco_aux, bg=color_cabecera, fg=color_fuente_cabecera,
                 text=dato, font=fuente_cabecera)
             etiqueta_aux.pack(fill=tkinter.BOTH, expand=True)
+            # Añadimos la etiqueta a la lista de controles de la cabecera.
+            self.__cabecera[col] = etiqueta_aux
 
             # Ajustamos los anchos de las columnas para las filas.
             self.__marco_tabla.columnconfigure(col, weight=ajuste[col])
@@ -397,6 +404,14 @@ class Tabla(object):
         for fila, controles in self.__controles.items():
             controles['L'][columna].bind(
                 evento, partial(funcion, fila))
+
+    def añadir_evento_cabecera(self, evento, columna, funcion):
+        """
+        Añade un evento sobre el campo correspondiente a la cabecera (para más
+        información, ver función añadir_evento).
+
+        """
+        self.__cabecera[columna].bind(evento, funcion)
 
     def definir_color_columna(self, columna, color, funcion=None):
         """
