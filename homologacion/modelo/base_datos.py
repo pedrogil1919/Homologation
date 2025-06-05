@@ -25,6 +25,12 @@ ESTADO = {
     3: ((1,), (0,)),
     4: ((1,), (1,))}
 
+# Nombre del campo por el que vamos a ordenar la tabla de equipos.
+ORDEN_TABLA = {
+    1: "FK_EQUIPO",
+    2: "equipo",
+    3: "competicion"}
+
 
 class Conexion():
 
@@ -55,7 +61,7 @@ class Conexion():
         # Comprobamos que la tabla Homologacion_EstadoEquipo tenga todos los
         # equipos que están incluidos en la tabla Equipo de la bd de
         # administración.
-        cursor_equipos = self.__conexion.cursor()
+        cursor_equipos = self.__conexion.cursor(prepared=True)
         cursor_equipos.execute(
             "INSERT INTO Homologacion_EstadoEquipo(FK_EQUIPO) "
             "SELECT ID_EQUIPO FROM VistaEquipo "
@@ -67,6 +73,10 @@ class Conexion():
         self.__host = host
         self.__database = database
 
+        # Índice al nombre del campo por el que vamos a ordenar la tabla
+        # con la lista de equipos (ver constante ORDEN_TABLA)
+        self.__orden = 1
+
     def __str__(self):
         """
         Devuelve los datos informativos de la conexión.
@@ -77,53 +87,75 @@ class Conexion():
 ################################################################################
 ################################################################################
 ################################################################################
-    def lista_equipos(self, estado, equipo=None):
+    def lista_equipos(self, estado, dorsal=None):
         """
         Obtiene la lista de equipos filtrados por el valor de estado (ver
         definición del tipo enumerado "estado"). Si equipo se corresponde con el
         ID de un equipo, sólo obtiene los datos de este equipo (que puede ser
-        null si el equipo no cumple las condiciones del estado.
+        null si el equipo no cumple las condiciones del estado).
 
         """
-#            SELECT ROW_NUMBER() OVER (ORDER BY FK_EQUIPO ASC) AS ORDEN,
 
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         filtro_registrado = ESTADO[estado][0]
         filtro_homologado = ESTADO[estado][1]
-        if equipo is None:
-            cursor.execute(
-                "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN " +
-                self.cadena_lista(filtro_registrado) +
-                " AND homologado IN " + self.cadena_lista(filtro_homologado),
-                filtro_registrado + filtro_homologado)
+        # Obtenemos la lista de equipos a homologar.
+        consulta = "SELECT * FROM "
+        consulta += self.__vista_ordenada()
+        consulta += "WHERE registrado IN %s AND homologado IN %s" % (
+            self.cadena_lista(filtro_registrado),
+            self.cadena_lista(filtro_homologado))
+        if dorsal is None:
+            # En el caso de que no nos pasen el dorsal del equipo, nos descargamos
+            # todos los equipos.
+            cursor.execute(consulta, filtro_registrado + filtro_homologado)
         else:
-            cursor.execute(
-                "SELECT * FROM Homologacion_ListaEquipos WHERE registrado IN " +
-                self.cadena_lista(filtro_registrado) +
-                " AND homologado IN " + self.cadena_lista(filtro_homologado) +
-                " AND FK_EQUIPO = %s",
-                filtro_registrado + filtro_homologado + (equipo,))
+            # En el caso de que nos pasen el dorsal, sólo nos descargamos ese
+            # equipo.
+            consulta += " AND FK_EQUIPO = %s"
+            cursor.execute(consulta, filtro_registrado +
+                           filtro_homologado + (dorsal,))
         equipos = cursor.fetchall()
         return equipos
 
-    def lista_estado_equipos(self, equipo=None):
+    def lista_estado_equipos(self, dorsal=None):
         """
-        Devuelve el estado de cada uno de los equipos. El valor devuelto es:
-
-        - I: Equipo inscrito pero no registrado todavía.
-        - R: Equipo registrado pero no homologado todavía.
-        - H: Equipo registrado y homologado.
-
+        Devuelve el estado de cada uno de los equipos. El estado se determina a partir
+        de los campos registrado y homologado. El significado es:
+        
+        - registrado=0: equipo no registrado, independientemente del estado del campo
+          homologado.
+        - registrado=0, homologado=1: registrado pero no homologado todavía.
+        - registrado=1, homologado=1: equipo ya homologado.
+        
         """
-        cursor = self.__conexion.cursor(dictionary=True, prepared=False)
-        consulta = "SELECT * FROM Homologacion_EstadoEquipos"
-        if equipo is not None:
-            consulta += " WHERE FK_EQUIPO = %i" % equipo
-        cursor.execute(consulta)
+        cursor = self.__conexion.cursor(dictionary=True, prepared=True)
+        consulta = "SELECT ORDEN, registrado, homologado FROM "
+        consulta += self.__vista_ordenada()
+        if dorsal is None:
+            cursor.execute(consulta)
+        else:
+            consulta += " WHERE FK_EQUIPO = %s"
+            cursor.execute(consulta, (dorsal,))
         equipos = cursor.fetchall()
         return equipos
 
-    def registrar_equipo(self, fila):
+    def __dorsal_equipo(self, fila):
+        """
+        Obtiene el dorsal del equipo a partir de la fila que ocupa en la tabla
+
+        """
+        cursor_dorsal = self.__conexion.cursor(prepared=True)
+        consulta = "SELECT FK_EQUIPO FROM "
+        consulta += self.__vista_ordenada()
+        consulta += "WHERE ORDEN = %s"
+        cursor_dorsal.execute(consulta, (fila,))
+        if cursor_dorsal.rowcount != 1:
+            raise RuntimeError("Error en función de cambio de estado.")
+        dorsal = cursor_dorsal.fetchone()[0]
+        return dorsal
+
+    def registrar_equipo(self, dorsal):
         """
         Alterna el estado de registro de un equipo
 
@@ -133,15 +165,8 @@ class Conexion():
           necesario determinar el dorsal a partir de la fila.
 
         """
-        # Obtenemos el dorsal del equipo a partir de la fila en la tabla.
-        cursor_dorsal = self.__conexion.cursor(prepared=True)
-        cursor_dorsal.execute(
-            "SELECT FK_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
-        if cursor_dorsal.rowcount != 1:
-            raise RuntimeError("Error en función de cambio de estado.")
-        dorsal = cursor_dorsal.fetchone()[0]
         # Determinamos el estado de registro del equipo, y cambiamos su estado.
-        estado_nuevo = 1 if (self.estado_equipo(fila) == 0) else 0
+        estado_nuevo = 1 if (self.estado_equipo(dorsal) == 0) else 0
 
         # Comprobamos que el equipo no esté bloqueado por otro usuario, y por
         # tano no podemos cambiar su estado.
@@ -155,7 +180,7 @@ class Conexion():
             if e.errno == 1205:
                 raise BlockingIOError(
                     "El equipo está bloqueado por otro usuario. "
-                    "Espere a que termine para poder continar.")
+                    "Espere a que termine para poder continuar.")
             else:
                 raise e
 
@@ -167,20 +192,14 @@ class Conexion():
             raise RuntimeError("Error en función de cambio de estado.")
         self.__conexion.commit()
 
-    def estado_equipo(self, fila):
+    def estado_equipo(self, dorsal):
         """
         Determina el estado de registro de un equipo.
 
         """
-        cursor_dorsal = self.__conexion.cursor(prepared=True)
+#        cursor_dorsal = self.__conexion.cursor(prepared=True)
         cursor_estado = self.__conexion.cursor(prepared=True)
-        # Obtenemos el dorsal del equipo.
-        cursor_dorsal.execute(
-            "SELECT FK_EQUIPO FROM Homologacion_ListaEquipos WHERE ORDEN = %s", (fila,))
-        if cursor_dorsal.rowcount != 1:
-            raise RuntimeError("Error en función de cambio de estado.")
-        dorsal = cursor_dorsal.fetchone()[0]
-        # Determinamos el estado de registro del equipo, para alternarlo.
+#        # Determinamos el estado de registro del equipo, para alternarlo.
         cursor_estado.execute(
             "SELECT registrado FROM Homologacion_ListaEquipos "
             "WHERE FK_EQUIPO = %s", (dorsal,))
@@ -194,10 +213,12 @@ class Conexion():
         Obtiene los datos del equipo a partir de la fila en la tabla
 
         """
+        dorsal = self.__dorsal_equipo(fila)
+
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         cursor.execute(
-            "SELECT FK_EQUIPO, equipo FROM Homologacion_ListaEquipos WHERE ORDEN = %s",
-            (fila,))
+            "SELECT FK_EQUIPO, equipo FROM Homologacion_ListaEquipos WHERE FK_EQUIPO = %s",
+            (dorsal,))
 
         nombre = cursor.fetchone()
         return nombre[0], nombre[1]
@@ -340,6 +361,20 @@ class Conexion():
         cursor.execute("SHOW COLUMNS FROM Homologacion_ListaEquipos")
         columnas = cursor.fetchall()
         return columnas
+
+    def __vista_ordenada(self):
+        """
+        Devuelve la estructura de una subconsulta ordenada mendiante
+        la función ROW_NUMBER de SQL.
+        
+        """
+        # NOTA: Esto crea una vista temporal, que deberá ser consultada
+        # mediante una vista real, del tipo:
+        # SELECT * FROM
+        #    (SELECT ...
+        consulta = "(SELECT ROW_NUMBER() OVER (ORDER BY %s ASC) AS ORDEN, Homologacion_ListaEquipos.* FROM Homologacion_ListaEquipos) AS subconsulta " % ORDEN[
+            self.__orden]
+        return consulta
 
     @staticmethod
     def cadena_lista(lista):
