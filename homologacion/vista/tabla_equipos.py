@@ -21,12 +21,13 @@ El objeto puede tener dos estados:
 @author: pedrogil
 '''
 
+from functools import partial
 import tkinter.messagebox
 
 from leer_constantes import leer_cabecera
 from leer_constantes import leer_colores_tabla, leer_colores_puntos
 from leer_constantes import leer_fuente
-from modelo.base_datos import estado
+from modelo.base_datos import estado, orden_tabla
 from modelo.pagina_edicion import Pagina
 from modelo.tabla import Tabla
 
@@ -52,6 +53,9 @@ class TablaEquipos(object):
           cuando no se está visualizando los puntos de homologación.
 
         '''
+        # Criterio de ordenación. Inicialmente, ordenamos por dorsal.
+        self.__orden = orden_tabla.DORSAL
+
         # Guardamos la conexión a la base de datos.
         self.__conexion = conexion
         # Guardamos el marco donde se mostrarán los puntos de homologación.
@@ -125,6 +129,18 @@ class TablaEquipos(object):
             fuente_filas=self.__fuente_filas,
             color_fuente_filas=self.__color_fuente_filas)
 
+        def ordenar(crierio, event=None):
+            self.__orden = crierio
+            self.refrescar_tabla()
+        # Añadimos el evento doble click a la cabecera, para permitir ordenar
+        # respecto de la columna pulsada.
+        self.__tabla_equipos.añadir_evento_cabecera(
+            "<Double-1>", 0, partial(ordenar, orden_tabla.DORSAL))
+        self.__tabla_equipos.añadir_evento_cabecera(
+            "<Double-1>", 1, partial(ordenar, orden_tabla.NOMBRE))
+        self.__tabla_equipos.añadir_evento_cabecera(
+            "<Double-1>", 2, partial(ordenar, orden_tabla.COMPETICION))
+
         def color_zona(fila, columna, valor):
             " Función para definir el color de las zonas de hommologación."
             try:
@@ -186,7 +202,7 @@ class TablaEquipos(object):
                 "antes de editar otro equipo.")
             return
         # Obtenemos el nombre del equipo para mostrarselo al usuario.
-        dorsal, equipo = self.__conexion.datos_equipo(fila)
+        dorsal, equipo = self.__conexion.datos_equipo(fila, self.__orden)
         # Antes de cambiar de estado, preguntamos al usuario.
         if tkinter.messagebox.askokcancel(
                 "Registrar equipo",
@@ -227,7 +243,7 @@ class TablaEquipos(object):
         # Si el equipo no está registrado, no podemos homologarlo todavía.
         # En primer lugar, obtenemos el dorsal del equipo a partir de la fila en
         # la que se encuentra.
-        dorsal, __ = self.__conexion.datos_equipo(fila)
+        dorsal, __ = self.__conexion.datos_equipo(fila, self.__orden)
         if self.__conexion.estado_equipo(dorsal) == 0:
             return
         # Función para definir el color de la etiqueta de la página.
@@ -241,7 +257,7 @@ class TablaEquipos(object):
             # Fijamos el mismo color del borde de la tabla en la página.
             colores_tabla = leer_colores_tabla()
             self.__pagina_edicion = Pagina(
-                self.__puntos, self.__conexion, fila, zona,
+                self.__puntos, self.__conexion, fila, self.__orden, zona,
                 self.__desbloquear, color_punto, colores_tabla["BORDE"])
             self.__mostrar_area()
 
@@ -267,20 +283,23 @@ class TablaEquipos(object):
 
         """
         # Obtenemos los datos para la tabla,
-        lista = self.__conexion.lista_equipos(self.__estado_tabla, dorsal)
+        lista = self.__conexion.lista_equipos(
+            self.__estado_tabla, self.__orden, dorsal)
         # NOTA: Si equipo no es None, es decir, requerimos la información de
         # un equipo, pero la base de datos no nos devuelve ningún registro,
         # significa que éste ha cambiado de estado y no supera el filtro de la
         # tabla actual. En ese caso, lo que hacemos es refrescar toda la tabla,
         # y ponemos equipo a None para que entre en el código correcto del if.
         if len(lista) == 0:
-            lista = self.__conexion.lista_equipos(self.__estado_tabla)
+            lista = self.__conexion.lista_equipos(
+                self.__estado_tabla, self.__orden)
             dorsal = None
         # Formateamos los datos para mostrarlos en la tabla.
         lista = Tabla.formatear_lista_tabla(lista)
         # Obtenemos el estado de cada equipo, para que la función de determinar
         # el color de la celda funcione correctamente.
-        lista_estados = self.__conexion.lista_estado_equipos(dorsal)
+        lista_estados = self.__conexion.lista_estado_equipos(
+            self.__orden, dorsal)
         # Para ello generamos una variable temporal que será accedida por la
         # función de cálculo del color de la celda con el nombre del equipo.
         self.__temp_estado = {}
