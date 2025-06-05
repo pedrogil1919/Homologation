@@ -360,7 +360,13 @@ class Tabla(object):
         for columna in etiquetas:
             etiqueta = etiquetas[columna]
             # Asignamos el texto de la celda.
-            etiqueta.config(text=valores[columna])
+            texto = valores[columna]
+            if texto is None:
+                # Comprobarmos si el campo está a None, ya que en ese caso,
+                # debemos marcarlo como cadena vacía.
+                etiqueta.config(text="")
+            else:
+                etiqueta.config(text=texto)
             # y su color, en fucnión del valor.
             self.__color_celda(fila, columna, etiqueta)
 
