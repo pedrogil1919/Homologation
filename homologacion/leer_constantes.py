@@ -166,4 +166,13 @@ def leer_margen_pagina():
     return int(elemento.attrib["MARGENX"]), int(elemento.attrib["MARGENY"])
 
 
+@captura_error
+def leer_alturas_tabla():
+    raiz = archivo_xml.getroot()
+    elemento = raiz.find("alturas")
+    return {
+        "CABECERA": int(elemento.attrib["CABECERA"]),
+        "DATOS": int(elemento.attrib["DATOS"])}
+
+
 ##############################################################

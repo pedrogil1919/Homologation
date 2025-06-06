@@ -24,7 +24,7 @@ El objeto puede tener dos estados:
 from functools import partial
 import tkinter.messagebox
 
-from leer_constantes import leer_cabecera
+from leer_constantes import leer_cabecera, leer_alturas_tabla
 from leer_constantes import leer_colores_tabla, leer_colores_puntos
 from leer_constantes import leer_fuente
 from modelo.base_datos import estado, orden_tabla
@@ -113,6 +113,7 @@ class TablaEquipos(object):
         cabecera = leer_cabecera()
         columnas = self.__conexion.columnas()
         configuracion = self.__configuracion_columnas(columnas, cabecera)
+        alturas = leer_alturas_tabla()
         # Creamos la tabla, junto con su formato.
         self.__tabla_equipos = Tabla(
             tabla,
@@ -120,8 +121,8 @@ class TablaEquipos(object):
             ancho=configuracion["ancho"],
             ajuste=configuracion["ajuste"],
             alineacion=configuracion["alineacion"],
-            alto_cabecera=50,
-            alto_datos=45,
+            alto_cabecera=alturas["CABECERA"],
+            alto_datos=alturas["DATOS"],
             color_borde=colores_tabla["BORDE"],
             color_fondo=colores_tabla["FONDO"],
             color_cabecera=colores_tabla["CABECERA"],
@@ -183,8 +184,8 @@ class TablaEquipos(object):
         self.__estado_tabla = self.__seleccionar_estado(estado.TODOS)
 
         # Guardamos en esta variable la referencia a la página que estamos
-        # editando. Si es None, significa que estamos no estamos editando nada,
-        # es decir, estamos en modo Lectura.
+        # editando. Si es None, significa que no estamos editando nada, es
+        # decir, estamos en modo Lectura.
         self.__pagina_edicion = None
         # Variable temporal empleada por la función que determinar el color
         # de la columna con el nombre del equipo (ver función refrescar_tabla
@@ -289,11 +290,11 @@ class TablaEquipos(object):
         # Obtenemos los datos para la tabla,
         lista = self.__conexion.lista_equipos(
             self.__estado_tabla, self.__orden, dorsal)
-        # NOTA: Si equipo no es None, es decir, requerimos la información de
+        # NOTA: Si dorsal no es None, es decir, requerimos la información de
         # un equipo, pero la base de datos no nos devuelve ningún registro,
         # significa que éste ha cambiado de estado y no supera el filtro de la
         # tabla actual. En ese caso, lo que hacemos es refrescar toda la tabla,
-        # y ponemos equipo a None para que entre en el código correcto del if.
+        # y ponemos dorsal a None para que entre en el código correcto del if.
         if len(lista) == 0:
             lista = self.__conexion.lista_equipos(
                 self.__estado_tabla, self.__orden)
@@ -318,7 +319,7 @@ class TablaEquipos(object):
             # y si sólo es refrescar los datos del equipo en cuestión, ponemos
             # el indicador a True.
             self.__tabla_equipos.refrescar(lista, True)
-        # En este punto ya no es necesario ela variable temporal, por lo que
+        # En este punto ya no es necesario la variable temporal, por lo que
         # podemos eliminarla.
         self.__temp_estado = None
 
