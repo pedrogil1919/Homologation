@@ -1,6 +1,8 @@
 '''
 Created on 3 feb 2025
 
+Módulo principal para realizar la homologación de los equipos.
+
 @author: pedrogil
 '''
 
@@ -71,7 +73,7 @@ def temporizador_refrescar():
     Función para refrescar los datos de la tabla de forma periódica.
 
     """
-    ventana_principal.after(500, temporizador_refrescar)
+    ventana_principal.after(10000, temporizador_refrescar)
     tabla_equipos.refrescar_tabla()
     estadisticas.config(text=conexion.resumen_equipos())
 
@@ -151,17 +153,22 @@ tkinter.Label(cabecera, image=imagen_cabecera).pack(padx=10, pady=10)
 tabla = tkinter.Frame(ventana_principal, bg="yellow")
 tabla.grid(row=1, column=0, sticky="nsew")
 
-# Creamos otro marco donde aparecerán los puntos a validar.
+# Creamos otro marco al lado derecho donde incluiremos los elementos para
+# crear la página de edición de puntos de homologación.
 area = tkinter.Frame(ventana_principal)
 area.grid(row=0, column=1, sticky="nsew", rowspan=2)
 
+# Creamos un marco donde aparecerán los puntos de homologación. La llamada a la
+# función pack se hace dentro de la clase TablaEquipos, en función de si
+# estamos editando un equipo o se encuentra vacía.
 puntos = tkinter.Frame(area)
+# Y añadimos otro marco con el fondo, para mostrar cuando no estamos mostrando
+# ningún equipo.
 fondo = tkinter.Frame(area)
 area.columnconfigure(0, weight=1)
 area.rowconfigure(0, weight=1)
 imagen_logo = PhotoImage(file=imagenes["LOGO"])
 tkinter.Label(fondo, borderwidth=0, image=imagen_logo).pack(expand=True)
-
 
 # Creamos un marco para mostrar la barra de estado.
 barra_estado = tkinter.Frame(ventana_principal)
@@ -182,7 +189,7 @@ tabla_equipos = TablaEquipos(tabla, conexion, puntos, fondo)
 ancho_pagina = leer_ancho_pagina()
 
 # Fijamos el ancho mínimo de la ventana igual al áncho mínimo de la tabla de
-# equipos.
+# equipos más el ancho requerido para la página de edición de puntos.
 ventana_principal.minsize(tabla_equipos.ancho+ancho_pagina, 300)
 
 ################################################################################

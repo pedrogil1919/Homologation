@@ -49,8 +49,8 @@ class Tabla(object):
 
     def __init__(self, marco, cabecera,
                  ancho=(100,),
-                 ajuste=("C",),
-                 alineacion=(0,),
+                 ajuste=(0,),
+                 alineacion=("C",),
                  alto_cabecera=20,
                  alto_datos=20,
                  color_borde="black",
@@ -79,9 +79,7 @@ class Tabla(object):
         - alineacion: alineación del texto para cada columna (L, C, R).
         - alto_cabecera, en pixeles
         - alto_datos, en píxeles
-        - colores: diccionario con la información de los colores para cada una
-          de las partes de la tabla: las claves a incluir son:
-          - 
+        - color_xxx
         - fuente_cabecera (familia, tamaño, atributos)
         - fuente_datos (familia, tamaño, atributos)
 
@@ -367,13 +365,8 @@ class Tabla(object):
         for columna in etiquetas:
             etiqueta = etiquetas[columna]
             # Asignamos el texto de la celda.
-            texto = valores[columna]
-            if texto is None:
-                # Comprobarmos si el campo está a None, ya que en ese caso,
-                # debemos marcarlo como cadena vacía.
-                etiqueta.config(text="")
-            else:
-                etiqueta.config(text=texto)
+            valor = valores[columna]
+            etiqueta.config(text=valor if valor is not None else "")
             # y su color, en fucnión del valor.
             self.__color_celda(fila, columna, etiqueta)
 
@@ -417,6 +410,8 @@ class Tabla(object):
         """
         Definir el color para representar una celda
         Argumentos:
+        - columna: índice de la columna. El color se aplica a todas las celdas
+          de esta columna.
         - color: código del color de tkinter por defecto para la celda
         - funcion: función que permite calcular el color de la celda en función
           del valor de esta. Debe ser una función que devuelva un código de
@@ -518,7 +513,8 @@ class Tabla(object):
                 color = funcion(fila, columna, etiqueta["text"])
             except ValueError:
                 color = color_defecto
-
+            # TODO: fila_completa indica que hay que pintar de ese color toda la
+            # fila, no solo la celda.
         etiqueta.config(bg=color)
 
     def __get_ancho_tabla(self):

@@ -49,7 +49,7 @@ class TablaEquipos(object):
         - marco: marco de tkinter donde se construirá toda la interfaz gráfica
         - conexion.
         - puntos: marco auxiliar donde se mostrarán los puntos de homologacion.
-        - etiqueta_fondo: etiqueta con el fondo a mostrar en el area de puntos
+        - fondo: etiqueta con el fondo a mostrar en el area de puntos
           cuando no se está visualizando los puntos de homologación.
 
         '''
@@ -60,6 +60,7 @@ class TablaEquipos(object):
         self.__conexion = conexion
         # Guardamos el marco donde se mostrarán los puntos de homologación.
         self.__puntos = puntos
+        # y el fondo, para cuando no se estén mostrando puntos.
         self.__fondo = fondo
 
         # Creamos una cabecera para incluir los botones de cambio de pestaña.
@@ -74,6 +75,7 @@ class TablaEquipos(object):
         marco.rowconfigure(index=1, weight=1)
         marco.columnconfigure(index=0, weight=1)
 
+        # Variable para gestionar los radiobutton
         self.variable = tkinter.IntVar()
         self.variable.set(1)
         # Sobre la cabecera añadimos botones para cambiar entre los distintos
@@ -144,9 +146,11 @@ class TablaEquipos(object):
         def color_zona(fila, columna, valor):
             " Función para definir el color de las zonas de hommologación."
             try:
-                return self.__colores["COLOR_SI"] if int(valor) == 0 else self.__colores["COLOR_NO"]
+                color = self.__colores["COLOR_SI"] if int(
+                    valor) == 0 else self.__colores["COLOR_NO"]
             except ValueError:
-                return self.__colores["COLOR_NP"]
+                color = self.__colores["COLOR_NP"]
+            return color
 
         # Configuración de eventos. La tabla de configuración de la base de
         # datos nos indica sobre qué columnas se deben ejecutar los eventos
