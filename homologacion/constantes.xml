@@ -16,7 +16,7 @@
 	
     <graficos DIRECTORIO="graficos/">
         <inicio DIRECTORIO="" IMAGEN="splash.png" TIEMPO="1.5" />
-        <logos DIRECTORIO="" ICONO="alcabot_color_ico.png" CABECERA="eurobotSpain.png" FONDO="alcabot.png"/>
+        <logos DIRECTORIO="" ICONO="alcabot_color_ico.png" LOGO_CABECERA="eurobotSpain.png" FONDO="alcabot.png"/>
     </graficos>
     
     <fuente        FAMILIA="LIBERATION SANS" TAMAÑO="10" ESTILO=""     COLOR="black"/> 

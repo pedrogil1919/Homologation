@@ -80,6 +80,13 @@ class Conexion():
         self.__host = host
         self.__database = database
 
+        # Obtenemos la lista de categorías existentes en la base de datos.
+        cursor_categorias = self.__conexion.cursor(
+            dictionary=True, prepared=True)
+        cursor_categorias.execute("SELECT * FROM GeneralCompeticion")
+        categorias = cursor_categorias.fetchall()
+        self.__categorias = tuple(c["ID_COMPETICION"] for c in categorias)
+
     def __str__(self):
         """
         Devuelve los datos informativos de la conexión.
@@ -105,7 +112,7 @@ class Conexion():
         - dorsal: Identificador del equipo. Si es None, se devuelve la lista
           completa, en función de los criterios de filtrado. Si no es None,
           se devuelve sólo los datos de ese equipo.
-          
+
         """
         cursor = self.__conexion.cursor(dictionary=False, prepared=True)
         filtro_registrado = ESTADO[estado][0]
@@ -385,9 +392,41 @@ class Conexion():
         # SELECT * FROM
         #    (SELECT ...
         consulta = "(SELECT ROW_NUMBER() OVER (ORDER BY %s ASC) AS ORDEN, " \
-            "Homologacion_ListaEquipos.* FROM Homologacion_ListaEquipos) " \
-            "AS subconsulta " % ORDEN_TABLA[orden]
+            "Homologacion_ListaEquipos.* FROM Homologacion_ListaEquipos " \
+            "%s ) " \
+            "AS subconsulta " % (
+                ORDEN_TABLA[orden], self.__filtro_categorias())
         return consulta
+
+    def __filtro_categorias(self):
+        #        lista = tuple(
+        #            c["ID_COMPETICION"] for c in self.__categorias if c["ID_COMPETICION"] < 3)
+        if len(self.__categorias) == 0:
+            return ""
+        elif len(self.__categorias) == 1:
+            return "WHERE FK_COMPETICION = %s" % self.__categorias[0]
+        else:
+            return "WHERE FK_COMPETICION IN %s" % str(self.__categorias)
+
+    def seleccion_categorias(self, categorias=None):
+        """
+        Función para seleccionar diferentes categorías en la tabla de equipos.
+
+        """
+        cursor = self.__conexion.cursor(prepared=True, dictionary=True)
+        if categorias is None:
+            # Si el parámetro es None, significa que nos están solicitando la
+            # lista de categorías existentes.
+            # Obtenemos la lista de categorías en la base de datos.
+            cursor.execute("SELECT * FROM GeneralCompeticion")
+            categorias = cursor.fetchall()
+            for categoria in categorias:
+                categoria["titulo"] = categoria["nombre"]
+                categoria["valor"] = 1 if categoria["ID_COMPETICION"] in self.__categorias else 0
+            return categorias
+        # En caso contrario, nos están mandando la lista para actualizarla.
+        self.__categorias = tuple(
+            c["ID_COMPETICION"] for c in categorias if c["valor"])
 
     @staticmethod
     def cadena_lista(lista):

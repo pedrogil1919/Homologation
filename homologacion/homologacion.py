@@ -134,6 +134,16 @@ ventana_principal = tkinter.Tk()
 # producidos en dichos controles.
 tkinter.CallWrapper = CapturarError
 
+# Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
+# depende del sistema operativo.
+if sys.platform == "linux" or sys.platform == "linux2":
+    ventana_principal.attributes("-zoomed", True)
+elif sys.platform == "darwin":
+    raise RuntimeError("Aplicación no diseñada para MAC")
+elif sys.platform == "win32":
+    ventana_principal.state('zoomed')
+
+
 ventana_principal.title("Homologación Eurobot Spain")
 # Abrimos el icono para la ventana.
 datos_logos = leer_logos()
@@ -146,7 +156,7 @@ cabecera.grid(row=0, column=0, sticky="nsew")
 
 # Agregar imagen dentro del Frame usando Label
 imagenes = leer_logos()
-imagen_cabecera = PhotoImage(file=imagenes["CABECERA"])
+imagen_cabecera = PhotoImage(file=imagenes["LOGO_CABECERA"])
 tkinter.Label(cabecera, image=imagen_cabecera).pack(padx=10, pady=10)
 
 # Creamos un marco donde colocar la tabla
@@ -184,7 +194,7 @@ estadisticas.pack(side=tkinter.RIGHT, padx=10)
 # Crear tabla y página de edición de puntos.
 ################################################################################
 # Crear objeto donde se colocará la tabla de equipos.
-tabla_equipos = TablaEquipos(tabla, conexion, puntos, fondo)
+tabla_equipos = TablaEquipos(ventana_principal, tabla, conexion, puntos, fondo)
 
 ancho_pagina = leer_ancho_pagina()
 
@@ -199,15 +209,6 @@ ventana_principal.minsize(tabla_equipos.ancho+ancho_pagina, 300)
 ventana_principal.columnconfigure(0, weight=0, minsize=tabla_equipos.ancho)
 ventana_principal.columnconfigure(1, weight=1, minsize=ancho_pagina)
 ventana_principal.rowconfigure(1, weight=1)
-
-# Iniciamos la ventana completamente maximizada. Tener en cuenta que esto
-# depende del sistema operativo.
-if sys.platform == "linux" or sys.platform == "linux2":
-    ventana_principal.attributes("-zoomed", True)
-elif sys.platform == "darwin":
-    raise RuntimeError("Aplicación no diseñada para MAC")
-elif sys.platform == "win32":
-    ventana_principal.state('zoomed')
 
 # Tecla Escape para salir de la aplicación
 ventana_principal.bind("<Escape>", cerrar_aplicacion)

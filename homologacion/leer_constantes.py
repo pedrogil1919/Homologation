@@ -143,11 +143,11 @@ def leer_logos():
     directorio = elemento.attrib["DIRECTORIO"]
     elemento = elemento.find("logos")
     directorio += elemento.attrib["DIRECTORIO"]
-    cabecera = directorio + elemento.attrib["CABECERA"]
+    cabecera = directorio + elemento.attrib["LOGO_CABECERA"]
     logo = directorio + elemento.attrib["FONDO"]
     icono = directorio + elemento.attrib["ICONO"]
     return {
-        "CABECERA": cabecera,
+        "LOGO_CABECERA": cabecera,
         "ICONO": icono,
         "LOGO": logo}
 

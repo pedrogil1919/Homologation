@@ -24,12 +24,13 @@ El objeto puede tener dos estados:
 from functools import partial
 import tkinter.messagebox
 
-from leer_constantes import leer_cabecera, leer_alturas_tabla
+from leer_constantes import leer_cabecera, leer_alturas_tabla, leer_logos
 from leer_constantes import leer_colores_tabla, leer_colores_puntos
 from leer_constantes import leer_fuente
 from modelo.base_datos import estado, orden_tabla
 from modelo.pagina_edicion import Pagina
 from modelo.tabla import Tabla
+from vista.formulario_seleccion import abrir_seleccion
 
 
 FUENTE_CABECERA = ("LIBERATION SANS", 20, "")
@@ -41,11 +42,13 @@ class TablaEquipos(object):
 
     '''
 
-    def __init__(self, marco, conexion, puntos, fondo):
+    def __init__(self, ventana, marco, conexion, puntos, fondo):
         '''
         Constructor
 
         Argumentos:
+        - ventana: ventana principal, para poder mostrar diálogos con
+          respecto a esta ventana.
         - marco: marco de tkinter donde se construirá toda la interfaz gráfica
         - conexion.
         - puntos: marco auxiliar donde se mostrarán los puntos de homologacion.
@@ -56,6 +59,8 @@ class TablaEquipos(object):
         # Criterio de ordenación. Inicialmente, ordenamos por dorsal.
         self.__orden = orden_tabla.DORSAL
 
+        # Guardamos la referencia a la ventana principal.
+        self.__ventana = ventana
         # Guardamos la conexión a la base de datos.
         self.__conexion = conexion
         # Guardamos el marco donde se mostrarán los puntos de homologación.
@@ -132,17 +137,14 @@ class TablaEquipos(object):
             fuente_filas=self.__fuente_filas,
             color_fuente_filas=self.__color_fuente_filas)
 
-        def ordenar(crierio, event=None):
-            self.__orden = crierio
-            self.refrescar_tabla()
         # Añadimos el evento doble click a la cabecera, para permitir ordenar
         # respecto de la columna pulsada.
         self.__tabla_equipos.añadir_evento_cabecera(
-            "<Double-1>", 0, partial(ordenar, orden_tabla.DORSAL))
+            "<Double-1>", 0, partial(self.__ordenar, orden_tabla.DORSAL))
         self.__tabla_equipos.añadir_evento_cabecera(
-            "<Double-1>", 1, partial(ordenar, orden_tabla.NOMBRE))
+            "<Double-1>", 1, partial(self.__ordenar, orden_tabla.NOMBRE))
         self.__tabla_equipos.añadir_evento_cabecera(
-            "<Double-1>", 2, partial(ordenar, orden_tabla.COMPETICION))
+            "<Double-1>", 3, partial(self.__filtro_categorias, None))
 
         def color_zona(fila, columna, valor):
             " Función para definir el color de las zonas de hommologación."
@@ -356,6 +358,38 @@ class TablaEquipos(object):
         estado = tkinter.DISABLED if bloquear else tkinter.NORMAL
         for boton in self.__pestañas.children.values():
             boton.config(state=estado)
+
+    def __ordenar(self, crierio, event=None):
+        """
+        Función para ordenar la tabla de equipos en función del criterio
+
+        """
+        if self.__pagina_edicion is not None:
+            return
+        # Solo actualizamos el criterio de ordenación cuando no estamos
+        # editando ningún equipo.
+        self.__orden = crierio
+        self.refrescar_tabla()
+
+    def __filtro_categorias(self, categorias, event=None):
+        """
+        Seleccionar las categorías a mostrar en la tabla de equipos.
+
+        """
+        if self.__pagina_edicion is not None:
+            return
+        categorias = self.__conexion.seleccion_categorias()
+
+        datos_logos = leer_logos()
+        cabecera = datos_logos["LOGO_CABECERA"]
+
+        aceptar = abrir_seleccion(
+            self.__ventana, "Categorías", cabecera,
+            "Selecciona las categorías a visualizar", categorias)
+
+        if aceptar:
+            self.__conexion.seleccion_categorias(categorias)
+            self.refrescar_tabla()
 
     def __color_equipo(self, fila, columna, valor):
         """
